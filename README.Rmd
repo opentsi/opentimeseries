@@ -1,0 +1,75 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# Open Time Series: Human-Friendly, Machine Readable Time Series
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+The primary goal of the opentimeseries R package is to conveniently
+read time series and there meta information from *opentsi* style archives.
+While Open Time Series Initiative archives use git to manage different
+versions of time series and GitHub as a remote data store, reading data
+does not require git to be installed on your local machine. 
+
+
+## Installation
+
+You can install the development version of opentimeseries from [GitHub](https://github.com/) with:
+
+```{r eval=FALSE}
+# install.packages("remotes")
+remotes::install_github("opentsi/opentimeseries")
+```
+
+## Basic Usage
+
+Given a unique time series identifier and a GitHub repo, *opentimeseries*
+will return a time series and long format `data.table`. 
+
+
+```{r example}
+library(opentimeseries)
+a <- read_open_ts("ch.kof.globalbaro.leading",
+                  remote_archive = "opentsi/kofethz")
+a
+```
+
+By specifying a date in addition, you can able to obtain other versions but
+the most recent one. The *opentimeseries* package will simply select
+the most recent release that was available at the selected date. 
+
+```{r}
+
+a202307 <- read_open_ts("ch.kof.globalbaro.leading",
+                        date = "2023-07-01")
+
+```
+
+Because time series data can get revised, storing vintages is important to monitor 
+data revisions and benchmark forecasts. Here's a quick visual comparison: 
+
+
+```{r}
+library(tsbox)
+a202307$id <- sprintf("%s.202307", a202307$id)
+a$id <- sprintf("%s.%s", a$id, Sys.Date())
+ts_plot(rbind(a202307,a))
+
+```
+
+
+## Get Entire History of a Time Series
+
