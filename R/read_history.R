@@ -14,6 +14,7 @@ read_history <- function(series,
                remote_archive = remote_archive,
                rbind_dt = rbind_dt,
                add_suffix = add_suffix,
-               lastn = lastn
+               lastn = lastn,
+               wide = wide
               )
 }
