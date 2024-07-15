@@ -34,8 +34,9 @@ find_version <- function(ref_date, tags,
 #' @importFrom data.table dcast
 #' @export
 triangle <- function(dt){
+  d <- dcast(dt, formula = date ~ id, value.var = "value")
   names(d) <- gsub("(.+)(v[0-9]{4})","\\2",names(d))
-  dcast(d, formula = date ~ id, value.var = "value")
+  d
 }
 
 

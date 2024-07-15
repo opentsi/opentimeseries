@@ -73,3 +73,22 @@ ts_plot(rbind(a202307,a))
 
 ## Get Entire History of a Time Series
 
+With opentimeseries you can get the entire history of a time series.
+Note that, in order to avoid nesting structures and varying output 
+type, unlike read_open_ts, read_history only allows for a single
+time series. 
+Hence, read_history only processes the first element of a vector
+of time series when multiple series keys are given. 
+Note how the *lastn* parameter allows you to limit version 
+extraction to the last couple of versions. 
+
+
+```{r}
+
+hist_triangle <- read_history("ch.kof.globalbaro.leading",
+ remote_archive = "opentsi/kofethz", lastn = 5)
+
+tail(hist_triangle)
+
+
+```
