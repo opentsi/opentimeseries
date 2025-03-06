@@ -12,7 +12,7 @@
 #' @param remote_archive character contains the username/repo of a GitHub archive. Defaults to rseed-koflab/ch.kof.
 #' @param rbind_dt boolean should data.tables be row bound to a single data.table?
 #' Defaults to TRUE.
-#' @param add_suffix boolean should a version suffix be added to the id? Defaults to FALSE.  
+#' @param add_suffix boolean should a version suffix be added to the id? Defaults to FALSE.
 #' @importFrom data.table fread rbindlist setcolorder
 #' @export
 read_open_ts <- function(series,
@@ -21,7 +21,7 @@ read_open_ts <- function(series,
   rbind_dt = TRUE,
   wide = TRUE,
   add_suffix = FALSE,
-  lastn = NULL
+  lastn = 5
 ){
   tags <- tags_list(remote_archive = remote_archive)
   if(!is.null(lastn)){
@@ -31,7 +31,7 @@ read_open_ts <- function(series,
     if(length(series) > 1) warning("Nested looping not implemented, only using first time series. Setting date to NULL reads all versions of a specific series.")
     # for the sake of readability and avoiding heterogeneous output
     # we do not implemented nested loops that loop over series AND versions.
-    # TODO: expand.grid might be a nice way to implement nested tags/series. 
+    # TODO: expand.grid might be a nice way to implement nested tags/series.
     series_paths <- key_to_path(series[1])
     gh_urls <- generate_gh_url(series_path = series_paths,
       remote_archive = remote_archive, tag = tags)
@@ -61,12 +61,15 @@ read_open_ts <- function(series,
     return(l)
   }
 
-  # If date is not NULL return the correct 
+  # If date is not NULL return the correct
   # specific version
   series_paths <- key_to_path(series)
+  commit_dates <- get_commit_dates(remote_archive = remote_archive,
+                                   lastn = lastn)
+  commit_sha <- get_commit_by_date(commit_dates, d = date)
   gh_urls <- generate_gh_url(series_path = series_paths,
        remote_archive = remote_archive,
-       tag = find_version(date, tags = tags, return_as_tag = TRUE))
+       sha = commit_sha)
   l <- list()
   for (i in seq_along(gh_urls)){
     dt <- fread(gh_urls[i])
@@ -85,3 +88,4 @@ read_open_ts <- function(series,
     l
   }
 }
+

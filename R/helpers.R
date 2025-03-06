@@ -1,9 +1,9 @@
 
 #' Get a List of All Tags from a Remote Time Series Archive
-#' 
+#'
 #' For now, opentimeseries only supports GitHub as an arvchive host.
-#' We're working to suport other hosts including self-hosted git platforms. 
-#' 
+#' We're working to suport other hosts including self-hosted git platforms.
+#'
 #' @importFrom jsonlite fromJSON
 #' @export
 tags_list <- function(remote_archive){
@@ -14,8 +14,37 @@ tags_list <- function(remote_archive){
 }
 
 
+#' Get Commit Hashes and Dates from Remote Repository
+#'
+#'
+#' @importFrom httr2 request req_headers req_perform resp_body_json
+#' @export
+get_commit_dates <- function(remote_archive = "opentsi/kofethz",
+                             lastn = 5){
+  url <- sprintf("https://api.github.com/repos/%s/commits?sha=main&per_page=%d",
+                 remote_archive, lastn)
+  res <- request(url) |>
+    req_headers(Accept = "application/vnd.github.v3+json") |>
+    req_perform() |>
+    resp_body_json()
+
+  rbindlist(lapply(res, function(x) list(hash = x$sha,
+                               date = as.POSIXct(x$commit$author$date,
+                                                 format = "%Y-%m-%dT%H:%M:%SZ",
+                                                 tz = "UTC")
+                               )))
+}
+
+
+get_commit_by_date <- function(dd, d){
+  filtered <- dd[as.POSIXct(d) > dd$date,]
+  index_of_max <- which.max(as.numeric(dd[as.POSIXct(d) > dd$date,]$date))
+  filtered[index_of_max,]$hash
+}
+
+
 #' Find the Past Version That Is Closest to a Given Date
-#' 
+#'
 #' @export
 find_version <- function(ref_date, tags,
    return_as_tag = FALSE){
@@ -28,9 +57,9 @@ find_version <- function(ref_date, tags,
 }
 
 
-#' Show Entire History of a Series in a Wide Format Table 
-#' 
-#' 
+#' Show Entire History of a Series in a Wide Format Table
+#'
+#'
 #' @importFrom data.table dcast
 #' @export
 triangle <- function(dt){
@@ -39,21 +68,21 @@ triangle <- function(dt){
   d
 }
 
-
+# https://raw.githubusercontent.com/opentsi/kofethz/4d10e6332b2c37c4427df444be960f4d7e2cdec7/ch/kof/globalbaro/coincident/series.csv
 generate_gh_url <- function(series_path,
    base_url = "https://raw.githubusercontent.com/",
    remote_archive,
-   tag){
+   sha){
   full_url <- sprintf("%s%s/%s/%s/series.csv",
     base_url,
     remote_archive,
-    tag,
+    sha,
     series_path
   )
   full_url
 }
 
-
+#' @export
 key_to_path <- function(key, root_folder = "../ts_archive", remote = FALSE) {
   l <- strsplit(key, "\\.")
   sapply(l, function(x) {
