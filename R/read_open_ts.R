@@ -15,7 +15,55 @@
 #' @param add_suffix boolean should a version suffix be added to the id? Defaults to FALSE.
 #' @importFrom data.table fread rbindlist setcolorder
 #' @export
-read_open_ts <- function(series,
+read_open_ts <- function(
+    ts_keys,
+    date_time = Sys.time(),
+    repo,
+    remote_org = "opentsi" # set it to NULL to interpret repo as local path
+    ){
+  UseMethod("dataset_update", object = ts_keys)
+}
+
+
+#' @exportS3Method opentimeseries::read_open_ts
+read_open_ts.character <- function(
+    ts_keys,
+    date_time = Sys.time(),
+    repo,
+    remote_org = "opentsi" # set it to NULL to interpret repo as local path
+){
+  if(is.null(remote_org)){
+    class(ts_keys) <- c("local_keys", "character")
+  } else {
+    class(ts_keys) <- c("remote_keys", "character")
+  }
+}
+
+
+#' @exportS3Method opentimeseries::read_open_ts
+read_open_ts.remote_keys <- function(
+    ts_keys,
+    date_time = Sys.time(),
+    repo,
+    remote_org = "opentsi" # set it to NULL to interpret repo as local path
+){
+
+}
+
+
+
+#' @exportS3Method opentimeseries::read_open_ts
+read_open_ts.local_keys <- function(
+    ts_keys,
+    date_time = Sys.time(),
+    repo,
+    remote_org = "opentsi" # set it to NULL to interpret repo as local path
+    ){
+
+}
+
+
+deprecated_read_open_ts <- function(series,
   date = Sys.Date(),
   remote_archive = "opentsi/kofethz",
   rbind_dt = TRUE,
@@ -28,7 +76,11 @@ read_open_ts <- function(series,
     tags <- tags[1:lastn]
   }
   if(is.null(date)){
-    if(length(series) > 1) warning("Nested looping not implemented, only using first time series. Setting date to NULL reads all versions of a specific series.")
+    if(length(series) > 1){
+      warning("Nested looping not implemented,
+      only using first time series.
+      Setting date to NULL reads all versions of a specific series.")
+    }
     # for the sake of readability and avoiding heterogeneous output
     # we do not implemented nested loops that loop over series AND versions.
     # TODO: expand.grid might be a nice way to implement nested tags/series.

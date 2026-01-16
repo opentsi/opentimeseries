@@ -44,6 +44,13 @@ get_commit_dates <- function(remote_archive = "opentsi/kofethz",
 
 # dd = commit dates, d = date
 get_commit_by_date <- function(dd, d) {
+  # TODO:
+  # I guess we're not quite there yet.
+  # date conversion are tricky and dependent on the default time zone on
+  # your system which may differ from what git does...
+  # Github gives back Zulu (hence the Z) time zone = UTC.
+  # so we're doing the right thing by doing all comparisons in UTC
+
   # if d only yyyy-mm-dd not hh:mm:ss -> convert d to 23:59:59
   if (!grepl("\\d{2}:\\d{2}:\\d{2}$", as.POSIXct(d))) {
     d <- paste(d, "23:59:59")
