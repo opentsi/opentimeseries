@@ -103,7 +103,9 @@ generate_gh_url <- function(
 }
 
 #' @export
-key_to_path <- function(key, root_folder = "../ts_archive", remote = FALSE) {
+key_to_path <- function(key,
+                        root_folder = "../ts_archive",
+                        remote = FALSE) {
   l <- strsplit(key, "\\.")
   sapply(l, function(x) {
     if (remote) {
@@ -114,3 +116,12 @@ key_to_path <- function(key, root_folder = "../ts_archive", remote = FALSE) {
     }
   })
 }
+
+
+
+
+
+
+
+
+
