@@ -7,7 +7,7 @@
 resolve_meta(meta, lang = "en")
 }
 \arguments{
-\item{meta}{Metadata as a list (e.g., from read_meta() or fromJSON()).}
+\item{meta}{Metadata as a list (from read_meta()).}
 
 \item{lang}{Language code for labels (default "en").}
 }
@@ -15,8 +15,7 @@ resolve_meta(meta, lang = "en")
 A data.frame with columns: key, label_full, label_short.
 }
 \description{
-Takes dataset metadata and generates all available time series keys
-with their human-readable labels by traversing the hierarchy.
+Maps all keys to their human-readable labels.
 }
 \examples{
 \dontrun{

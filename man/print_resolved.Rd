@@ -9,19 +9,11 @@ print_resolved(resolved, format = c("full", "short"))
 \arguments{
 \item{resolved}{Output from resolve_meta().}
 
-\item{format}{Either "full" or "short" labels.}
+\item{format}{Either "full" or "short".}
 }
 \value{
 Invisibly returns the input.
 }
 \description{
-Prints resolved key-label mappings in a readable format.
-}
-\examples{
-\dontrun{
-meta <- read_meta("opentsi/kofethz")
-resolved <- resolve_meta(meta)
-print_resolved(resolved)
-print_resolved(resolved, format = "short")
-}
+Prints key-label mappings in a readable format.
 }

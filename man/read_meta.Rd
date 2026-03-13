@@ -2,24 +2,31 @@
 % Please edit documentation in R/metadata.R
 \name{read_meta}
 \alias{read_meta}
-\title{Read Metadata from Remote Archive}
+\title{Read Metadata from Archive}
 \usage{
-read_meta(remote_archive, ref = "main")
+read_meta(archive, ref = "main")
 }
 \arguments{
-\item{remote_archive}{Repository path (e.g., "opentsi/kofethz").}
+\item{archive}{Either a remote repository path (e.g., "opentsi/kofethz")
+or a local path to an archive directory or metadata.json file.}
 
-\item{ref}{Git ref (branch, tag, or commit). Defaults to "main".}
+\item{ref}{Git ref (branch, tag, or commit) for remote archives. Defaults to "main".}
 }
 \value{
 Metadata as a list.
 }
 \description{
-Fetches and parses metadata.json from a remote OpenTSI archive.
+Reads and parses metadata.json from a local or remote OpenTSI archive.
 }
 \examples{
 \dontrun{
+# Remote
 meta <- read_meta("opentsi/kofethz")
-meta$title$en
+
+# Local archive directory
+meta <- read_meta("path/to/my.dataset")
+
+# Local JSON file directly
+meta <- read_meta("path/to/metadata.json")
 }
 }
