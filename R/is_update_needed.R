@@ -20,7 +20,13 @@ compare_checksums <- function(rq_checksum, mi_checksum){
 #' @importFrom jsonlite fromJSON
 #' @export
 update_checksum <- function(cs, json_path="inst/metadata.json"){
-  mi <- fromJSON("")
+  if (file.exists(json_path)) {
+    mi <- jsonlite::fromJSON(json_path)
+  } else {
+    mi <- list()
+  }
+  # cannot parse empty string as json
+  # mi <- fromJSON("")
   mi$update_checksum <- cs
   json_content <- toJSON(mi, pretty = TRUE, auto_unbox = TRUE)
   writeLines(json_content, json_path)
