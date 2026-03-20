@@ -14,6 +14,8 @@ Roxygen: list(markdown = TRUE)
 Imports: 
     data.table,
     digest,
-    jsonlite
+    jsonlite,
+    fs,
+    httr2
 Suggests: 
     tsbox
