@@ -3,15 +3,14 @@
 #' @export
 is_update_needed <- function(request_checksum){
   checksum_equal <- compare_checksums(
-    rq_checksum = request_checksum,
-    mi_checksum = mi$update_checksum
+    rq_checksum = request_checksum
     )
   return(!checksum_equal)
 }
 
 
 #' @importFrom jsonlite function
-compare_checksums <- function(rq_checksum, mi_checksum){
+compare_checksums <- function(rq_checksum){
   mi <- fromJSON("inst/metadata.json")
   mi$update_checksum == rq_checksum
 }
