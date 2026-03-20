@@ -22,11 +22,16 @@ update_checksum <- function(cs, json_path="inst/metadata.json"){
   if (file.exists(json_path)) {
     mi <- jsonlite::fromJSON(json_path)
   } else {
-    mi <- list()
+    stop("Metadata file does not exist. Fix your repository.")
+  }
+
+  if(mi$update_checksum == ""){
+    return(FALSE)
   }
   # cannot parse empty string as json
   # mi <- fromJSON("")
   mi$update_checksum <- cs
   json_content <- toJSON(mi, pretty = TRUE, auto_unbox = TRUE)
   writeLines(json_content, json_path)
+  return(TRUE)
 }
