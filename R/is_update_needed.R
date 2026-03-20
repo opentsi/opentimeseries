@@ -1,7 +1,10 @@
 
 #' @importFrom digest digest
 #' @export
-is_update_needed <- function(request_checksum){
+is_update_needed <- function(checksum_input){
+
+  request_checksum <- digest(checksum_input, algo = "sha256")
+
   checksum_equal <- compare_checksums(
     rq_checksum = request_checksum
     )
