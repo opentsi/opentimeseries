@@ -2,14 +2,14 @@
 % Please edit documentation in R/list_opentsi_archives.R
 \name{list_opentsi_archives}
 \alias{list_opentsi_archives}
-\title{Get public Open Time Series Initiative Arvchives from GitHub}
+\title{Get public Open Time Series Initiative Archives from GitHub}
 \usage{
-list_opentsi_archives()
+list_opentsi_archives(pp = 100)
 }
 \value{
 A list of dictionaries containing information about each time series archive
 in the opentsi GitHub organization. Each dictionary has the keys "name", "description", and "url".
 }
 \description{
-Get public Open Time Series Initiative Arvchives from GitHub
+Get public Open Time Series Initiative Archives from GitHub
 }
