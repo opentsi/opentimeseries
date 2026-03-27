@@ -6,7 +6,7 @@
 #' using the official archives. Hence calls need to be adapted if you want to use your
 #' archives.
 #'
-#' @param series character vector containing the queried time series keys.
+#' @param series character vector containing the queried time series keys (without the leading country.provider.provider key elements). Defaults to NULL fetches all time series within a dataset.
 #' @param date date used to determine the version of a set of time series.
 #' Defaults to Sys.Date().
 #' @param remote_archive character contains the username/repo of a GitHub archive. Defaults to rseed-koflab/ch.kof.
@@ -16,12 +16,14 @@
 #' @importFrom data.table fread rbindlist setcolorder
 #' @export
 read_open_ts <- function(
-    ts_keys,
+    series,
     date_time = Sys.time(),
     repo,
     remote_org = "opentsi" # set it to NULL to interpret repo as local path
     ){
-  UseMethod("dataset_update", object = ts_keys)
+  # TODO: why this?
+  # UseMethod("dataset_update", object = ts_keys)
+  UseMethod("read_open_ts", object = ts_keys)
 }
 
 
@@ -62,72 +64,45 @@ read_open_ts.local_keys <- function(
 
 }
 
-
-deprecated_read_open_ts <- function(series,
+# before: deprecated_read_open_ts
+read_open_ts <- function(
+  series = NULL,
   date = Sys.Date(),
-  remote_archive = "opentsi/kofethz",
+  remote_archive = "opentsi",
   rbind_dt = TRUE,
   wide = TRUE,
   add_suffix = FALSE,
-  lastn = 5
+  lastn = 100, # last n commits
+  show_vintage_dates = FALSE 
 ){
-  tags <- tags_list(remote_archive = remote_archive)
-  if(!is.null(lastn)){
-    tags <- tags[1:lastn]
-  }
-  if(is.null(date)){
-    if(length(series) > 1){
-      warning("Nested looping not implemented,
-      only using first time series.
-      Setting date to NULL reads all versions of a specific series.")
-    }
-    # for the sake of readability and avoiding heterogeneous output
-    # we do not implemented nested loops that loop over series AND versions.
-    # TODO: expand.grid might be a nice way to implement nested tags/series.
-    series_paths <- key_to_path(series[1])
-    gh_urls <- generate_gh_url(series_path = series_paths,
-      remote_archive = remote_archive, tag = tags)
-    l <- list()
-    for (i in seq_along(gh_urls)){
-      dt <- fread(gh_urls[i])
-      dt$id <- series[1]
-      dt[, date := as.Date(date)]
-      setcolorder(dt, neworder = c("id","date","value"))
-      l[[i]] <- dt
-      if(rbind_dt){
-        # when merging all versions into one dt
-        # we need a suffix
-        dt[, id := sprintf("%s.%s", dt$id, tags[i])]
-      }
-    }
-
-    if(rbind_dt){
-      rbl <- rbindlist(l)
-      if(wide){
-        return(triangle(rbl))
-      }
-      return(rbl)
-    }
-
-    names(l) <- tags
-    return(l)
-  }
-
   # If date is not NULL return the correct
   # specific version
-  series_paths <- key_to_path(series)
+  # TODO: here, if lastn == N then check all commits
   commit_dates <- get_commit_dates(remote_archive = remote_archive,
                                    lastn = lastn)
-  commit_sha <- get_commit_by_date(commit_dates, d = date)
+  commit_res <- get_commit_by_date(commit_dates, d = date)
+  # get date of commit 
+  commit_sha <- commit_res$hash
+  commit_date <- commit_res$date
+
+  # conditional if no series (key) exists:
+  # TODO: check metadata here for keys
+  series_paths <- key_to_path(series)
   gh_urls <- generate_gh_url(series_path = series_paths,
        remote_archive = remote_archive,
        sha = commit_sha)
   l <- list()
   for (i in seq_along(gh_urls)){
     dt <- fread(gh_urls[i])
-    dt$id <- series[i]
-    dt[, date := as.Date(date)]
-    setcolorder(dt, neworder = c("id","date","value"))
+    dt$id <- series[i] # here coincident
+    # TODO: think about whether date set by user should be date or date of commit
+    if(show_vintage_dates){
+      dt[, query_date := as.Date(date)]
+      dt[, commit_date := as.Date(commit_date)]
+      setcolorder(dt, neworder = c("id","query_date", "commit_date","value"))
+    }else{
+      setcolorder(dt, neworder = c("id","value"))
+    }
     if(add_suffix){
       dt[, id := sprintf("%s.%s", dt$id, date)]
     }
