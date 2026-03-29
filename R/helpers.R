@@ -18,18 +18,23 @@ tags_list <- function(remote_archive) {
 #' Get Commit Hashes and Dates from Remote Repository
 #'
 #'
-#' @importFrom httr2 request req_headers req_perform resp_body_json
+#' @importFrom httr2 request req_headers req_error req_perform resp_body_json
 #' @export
 get_commit_dates <- function(remote_archive = "opentsi/kofethz",
-                             lastn = 5) {
-  url <- sprintf(
-    "https://api.github.com/repos/%s/commits?sha=main&per_page=%d",
-    remote_archive, lastn
-  )
-  res <- request(url) |>
-    req_headers(Accept = "application/vnd.github.v3+json") |>
-    req_perform() |>
-    resp_body_json()
+                             lastn = 100) {
+  for (branch in c("main", "master")) {
+    url <- sprintf(
+      "https://api.github.com/repos/%s/commits?sha=%s&per_page=%d",
+      remote_archive, branch, lastn
+    )
+    print(url)
+    resp <- request(url) |>
+      req_headers(Accept = "application/vnd.github.v3+json") |>
+      req_error(is_error = \(r) FALSE) |>
+      req_perform()
+    if (resp$status_code == 200) break
+  }
+  res <- resp_body_json(resp)
 
   rbindlist(lapply(res, function(x) {
     list(
@@ -57,7 +62,7 @@ get_commit_by_date <- function(dd, d) {
   }
   filtered <- dd[as.POSIXct(d) > dd$date, ]
   index_of_max <- which.max(as.numeric(filtered$date))
-  filtered[index_of_max, ]$hash
+  return(filtered[index_of_max, ])
 }
 
 #' Find the Past Version That Is Closest to a Given Date
@@ -93,11 +98,11 @@ generate_gh_url <- function(
     remote_archive,
     sha) {
   full_url <- sprintf(
-    "%s%s/%s/%s/series.csv",
-    base_url,
-    remote_archive,
-    sha,
-    series_path
+  "%s%s/%s/data-raw/%s/series.csv",
+  base_url,
+  remote_archive,
+  sha,
+  series_path
   )
   full_url
 }

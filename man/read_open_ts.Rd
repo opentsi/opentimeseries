@@ -4,15 +4,24 @@
 \alias{read_open_ts}
 \title{Read Time Series from an Open Time Series Archive}
 \usage{
-read_open_ts(ts_keys, date_time = Sys.time(), repo, remote_org = "opentsi")
+read_open_ts(
+  series = NULL,
+  date = Sys.Date(),
+  remote_archive = "opentsi",
+  rbind_dt = TRUE,
+  wide = TRUE,
+  add_suffix = FALSE,
+  lastn = 100,
+  show_vintage_dates = FALSE
+)
 }
 \arguments{
-\item{series}{character vector containing the queried time series keys.}
+\item{series}{character vector containing the queried time series keys (without the leading country.provider.provider key elements). Defaults to NULL fetches all time series within a dataset.}
 
 \item{date}{date used to determine the version of a set of time series.
 Defaults to Sys.Date().}
 
-\item{remote_archive}{character contains the username/repo of a GitHub archive. Defaults to rseed-koflab/ch.kof.}
+\item{remote_archive}{character contains the username/repo of a GitHub archive. Defaults to opentsi}
 
 \item{rbind_dt}{boolean should data.tables be row bound to a single data.table?
 Defaults to TRUE.}

@@ -4,7 +4,7 @@
 \alias{get_commit_dates}
 \title{Get Commit Hashes and Dates from Remote Repository}
 \usage{
-get_commit_dates(remote_archive = "opentsi/kofethz", lastn = 5)
+get_commit_dates(remote_archive = "opentsi/kofethz", lastn = 100)
 }
 \description{
 Get Commit Hashes and Dates from Remote Repository
