@@ -21,7 +21,7 @@ read_open_ts(
 \item{date}{date used to determine the version of a set of time series.
 Defaults to Sys.Date().}
 
-\item{remote_archive}{character contains the username/repo of a GitHub archive. Defaults to rseed-koflab/ch.kof.}
+\item{remote_archive}{character contains the username/repo of a GitHub archive. Defaults to opentsi}
 
 \item{rbind_dt}{boolean should data.tables be row bound to a single data.table?
 Defaults to TRUE.}
