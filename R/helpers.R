@@ -17,7 +17,12 @@ tags_list <- function(remote_archive) {
 
 #' Get Commit Hashes and Dates from Remote Repository
 #'
+#' Tries `main` then `master` and returns both the commit table and the
+#' branch name that succeeded, so callers can reuse it (e.g. for `read_meta`).
 #'
+#' @return A named list with `$commits` (a `data.table` of `hash` and `date`)
+#'   and `$branch` (the branch name that was found, either `"main"` or
+#'   `"master"`).
 #' @importFrom httr2 request req_headers req_error req_perform resp_body_json
 #' @export
 get_commit_dates <- function(remote_archive = "opentsi/kofethz",
@@ -27,16 +32,23 @@ get_commit_dates <- function(remote_archive = "opentsi/kofethz",
       "https://api.github.com/repos/%s/commits?sha=%s&per_page=%d",
       remote_archive, branch, lastn
     )
-    print(url)
     resp <- request(url) |>
       req_headers(Accept = "application/vnd.github.v3+json") |>
       req_error(is_error = \(r) FALSE) |>
       req_perform()
     if (resp$status_code == 200) break
   }
+
+  if (resp$status_code != 200) {
+    stop(sprintf(
+      "Archive '%s' not found or not accessible (HTTP %d).",
+      remote_archive, resp$status_code
+    ))
+  }
+
   res <- resp_body_json(resp)
 
-  rbindlist(lapply(res, function(x) {
+  commits <- rbindlist(lapply(res, function(x) {
     list(
       hash = x$sha,
       date = as.POSIXct(x$commit$author$date,
@@ -45,6 +57,8 @@ get_commit_dates <- function(remote_archive = "opentsi/kofethz",
       )
     )
   }))
+
+  list(commits = commits, branch = branch)
 }
 
 # dd = commit dates, d = date
@@ -97,14 +111,11 @@ generate_gh_url <- function(
     base_url = "https://raw.githubusercontent.com/",
     remote_archive,
     sha) {
-  full_url <- sprintf(
-  "%s%s/%s/data-raw/%s/series.csv",
-  base_url,
-  remote_archive,
-  sha,
-  series_path
+  ifelse(
+    nchar(series_path) == 0,
+    sprintf("%s%s/%s/data-raw/series.csv", base_url, remote_archive, sha),
+    sprintf("%s%s/%s/data-raw/%s/series.csv", base_url, remote_archive, sha, series_path)
   )
-  full_url
 }
 
 #' @export
