@@ -17,5 +17,6 @@ Imports:
     jsonlite,
     fs,
     httr2
-Suggests: 
+Suggests:
+    testthat (>= 3.0.0),
     tsbox
