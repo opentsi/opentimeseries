@@ -146,7 +146,7 @@ read_open_ts <- function(
       series <- sapply(paths, paste, collapse = ".")
     }
   }
-  print(series)
+  # print(series)
 
   # --- build URLs and fetch ---
   series_paths <- key_to_path(series)
