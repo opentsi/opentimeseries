@@ -6,6 +6,12 @@
 \usage{
 get_commit_dates(remote_archive = "opentsi/kofethz", lastn = 100)
 }
+\value{
+A named list with \verb{$commits} (a \code{data.table} of \code{hash} and \code{date})
+and \verb{$branch} (the branch name that was found, either \code{"main"} or
+\code{"master"}).
+}
 \description{
-Get Commit Hashes and Dates from Remote Repository
+Tries \code{main} then \code{master} and returns both the commit table and the
+branch name that succeeded, so callers can reuse it (e.g. for \code{read_meta}).
 }

@@ -16,22 +16,73 @@ read_open_ts(
 )
 }
 \arguments{
-\item{series}{character vector containing the queried time series keys (without the leading country.provider.provider key elements). Defaults to NULL fetches all time series within a dataset.}
+\item{series}{character vector of time series subkeys to query within the
+archive (e.g. \code{"coincident"} or \code{c("coincident", "leading")}). Defaults
+to \code{NULL}, which fetches all series available in the archive.}
 
-\item{date}{date used to determine the version of a set of time series.
-Defaults to Sys.Date().}
+\item{date}{\code{Date} or date-coercible string giving the point in time for
+which to retrieve the series. The function selects the most recent commit
+at or before this date. Defaults to \code{Sys.Date()}.}
 
-\item{remote_archive}{character contains the username/repo of a GitHub archive. Defaults to opentsi}
+\item{remote_archive}{character scalar; the GitHub archive in
+\code{"owner/repo"} format (e.g. \code{"opentsi/kofethz"}). Defaults to
+\code{"opentsi"}.}
 
-\item{rbind_dt}{boolean should data.tables be row bound to a single data.table?
-Defaults to TRUE.}
+\item{rbind_dt}{logical; if \code{TRUE} (default) the per-series \code{data.table}s
+are row-bound into a single \code{data.table}. If \code{FALSE} a named list is
+returned instead.}
 
-\item{add_suffix}{boolean should a version suffix be added to the id? Defaults to FALSE.}
+\item{wide}{logical; reserved for future use (currently unused). Defaults
+to \code{TRUE}.}
+
+\item{add_suffix}{logical; if \code{TRUE} the query date is appended to each
+series \code{id} separated by a dot. Defaults to \code{FALSE}.}
+
+\item{lastn}{integer; number of recent commits to inspect when searching
+for the right version. Increase this value when querying old dates that
+fall outside the default window. Defaults to \code{100}.}
+
+\item{show_vintage_dates}{logical; if \code{TRUE} two extra columns are added:
+\code{query_date} (the value of \code{date}) and \code{commit_date} (the date of the
+matched Git commit). Defaults to \code{FALSE}.}
+}
+\value{
+When \code{rbind_dt = TRUE} (default): a \code{data.table} with at least
+columns \code{id}, \code{date}, and \code{value}. When \code{show_vintage_dates = TRUE} the
+columns \code{query_date} and \code{commit_date} are prepended. When
+\code{rbind_dt = FALSE}: a named list of such \code{data.table}s, one per key.
 }
 \description{
-This function reads time series from an Open Time Series Archive. It is
-a convenient way to read directly from a remote Git repository or from local
-open time series archive. As a convenience function it is uses reasonable defaults
-using the official archives. Hence calls need to be adapted if you want to use your
-archives.
+Reads one or more time series from a remote GitHub-hosted Open Time Series
+(OpenTSI) archive. The function resolves the most recent Git commit at or
+before \code{date} and fetches each requested series from that snapshot, making
+it straightforward to retrieve reproducible, point-in-time data.
+}
+\examples{
+\dontrun{
+# Fetch a single series at today's version
+dt <- read_open_ts(
+  series         = "coincident",
+  remote_archive = "opentsi/ch.kof.globalbaro"
+)
+head(dt)
+
+# Fetch multiple series as of a specific past date, with vintage columns
+dt <- read_open_ts(
+  series = c(
+    "coincident",
+    "leading"
+  ),
+  date = "2024-01-01",
+  remote_archive = "opentsi/ch.kof.globalbaro",
+  show_vintage_dates = TRUE
+)
+
+# Return a named list instead of a single bound table
+lst <- read_open_ts(
+  series         = "coincident",
+  remote_archive = "opentsi/ch.kof.globalbaro",
+  rbind_dt       = FALSE
+)
+}
 }
