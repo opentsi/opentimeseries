@@ -105,16 +105,18 @@ triangle <- function(dt) {
   d
 }
 
-# https://raw.githubusercontent.com/opentsi/kofethz/4d10e6332b2c37c4427df444be960f4d7e2cdec7/ch/kof/globalbaro/coincident/series.csv
 generate_gh_url <- function(
     series_path,
     base_url = "https://raw.githubusercontent.com/",
     remote_archive,
     sha) {
+  # CSV files are flat in data-raw/csv/; use only the leaf name regardless of
+  # any hierarchy path separators that key_to_path may have introduced.
+  leaf <- basename(series_path)
   ifelse(
     nchar(series_path) == 0,
-    sprintf("%s%s/%s/data-raw/series.csv", base_url, remote_archive, sha),
-    sprintf("%s%s/%s/data-raw/%s/series.csv", base_url, remote_archive, sha, series_path)
+    sprintf("%s%s/%s/data-raw/csv/series.csv", base_url, remote_archive, sha),
+    sprintf("%s%s/%s/data-raw/csv/%s.csv", base_url, remote_archive, sha, leaf)
   )
 }
 

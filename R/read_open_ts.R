@@ -162,8 +162,10 @@ read_open_ts <- function(
       {
         result <- fread(gh_urls[i])
         if (!"value" %in% names(result)) {
-          # TODO: fix this here so it gives a correct response
-          stop("series.csv not found or has unexpected format")
+          stop("series not found or has unexpected format")
+        }
+        if ("time" %in% names(result) && !"date" %in% names(result)) {
+          names(result)[names(result) == "time"] <- "date"
         }
         result
       },
@@ -183,9 +185,9 @@ read_open_ts <- function(
     if (show_vintage_dates) {
       dt[, query_date := as.Date(date)]
       dt[, commit_date := as.Date(commit_date)]
-      setcolorder(dt, neworder = c("id", "query_date", "commit_date", "value"))
+      setcolorder(dt, neworder = c("id", "query_date", "commit_date", "date", "value"))
     } else {
-      setcolorder(dt, neworder = c("id", "value"))
+      setcolorder(dt, neworder = c("id", "date", "value"))
     }
     if (add_suffix) {
       dt[, id := sprintf("%s.%s", dt$id, date)]

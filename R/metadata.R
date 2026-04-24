@@ -152,11 +152,22 @@ traverse_hierarchy <- function(h, path = character()) {
     return(list())
   }
 
+  # Unnamed list = JSON array of leaf values
+  if (is.null(names(h))) {
+    vals <- unlist(h)
+    if (length(vals) > 0) return(lapply(vals, function(v) c(path, v)))
+    if (length(path) > 0) return(list(path))
+    return(list())
+  }
+
   paths <- list()
   for (k in names(h)) {
     child <- h[[k]]
     if (is.list(child) && length(child) > 0) {
       paths <- c(paths, traverse_hierarchy(child, c(path, k)))
+    } else if (is.character(child) && length(child) > 0) {
+      # Scalar string: dimension k has leaf value(s) — use value as path element
+      paths <- c(paths, lapply(child, function(v) c(path, v)))
     } else {
       paths <- c(paths, list(c(path, k)))
     }
