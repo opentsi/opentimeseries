@@ -110,13 +110,10 @@ generate_gh_url <- function(
     base_url = "https://raw.githubusercontent.com/",
     remote_archive,
     sha) {
-  # CSV files are flat in data-raw/csv/; use only the leaf name regardless of
-  # any hierarchy path separators that key_to_path may have introduced.
-  leaf <- basename(series_path)
   ifelse(
     nchar(series_path) == 0,
     sprintf("%s%s/%s/data-raw/csv/series.csv", base_url, remote_archive, sha),
-    sprintf("%s%s/%s/data-raw/csv/%s.csv", base_url, remote_archive, sha, leaf)
+    sprintf("%s%s/%s/data-raw/csv/%s.csv", base_url, remote_archive, sha, series_path)
   )
 }
 

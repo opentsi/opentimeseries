@@ -4,7 +4,7 @@
 #' 
 #' @export
 read_history <- function(series,
-                     remote_archive = "opentsi/demo",
+                     remote_archive = "opentsi/ch.kof.globalbaro",
                      rbind_dt = TRUE,
                      add_suffix = TRUE,
                      wide = TRUE,
@@ -17,4 +17,9 @@ read_history <- function(series,
                lastn = lastn,
                wide = wide
               )
+  # check if series = NULL or series vector > 20 values, if TRUE, then
+  # stop and tell user to narrow series down, else too much 
+
+  # should return same object as read_open_ts, i.e. xts?
+
 }

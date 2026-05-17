@@ -12,8 +12,8 @@
 #'   which to retrieve the series. The function selects the most recent commit
 #'   at or before this date. Defaults to `Sys.Date()`.
 #' @param remote_archive character scalar; the GitHub archive in
-#'   `"owner/repo"` format (e.g. `"opentsi/kofethz"`). Defaults to
-#'   `"opentsi"`.
+#'   `"owner/repo"` format (e.g. `"opentsi/ch.kof.kofbarometer"`). Defaults to
+#'   `"opentsi/ch.kof.globalbaro"`.
 #' @param rbind_dt logical; if `TRUE` (default) the per-series `data.table`s
 #'   are row-bound into a single `data.table`. If `FALSE` a named list is
 #'   returned instead.
@@ -66,7 +66,7 @@
 read_open_ts <- function(
   series = NULL,
   date = Sys.Date(),
-  remote_archive = "opentsi",
+  remote_archive = "opentsi/ch.kof.globalbaro",
   rbind_dt = TRUE,
   wide = TRUE,
   add_suffix = FALSE,
@@ -125,33 +125,24 @@ read_open_ts <- function(
 
   # --- resolve NULL series to all keys in archive ---
   if (is.null(series)) {
-    meta <- tryCatch(
-      read_meta(remote_archive, ref = branch),
+    keys_df <- tryCatch(
+      list_open_ts_keys(remote_archive, ref = branch),
       error = function(e) {
         stop(sprintf(
           paste0(
-            "Could not read metadata from '%s' (branch: %s) to determine available series.\n",
+            "Could not fetch series list from archive '%s' (branch: %s).\n",
             "Original error: %s"
           ),
           remote_archive, branch, conditionMessage(e)
         ))
       }
     )
-    paths <- get_paths(meta)
-    if (length(paths) == 0) {
-      # Flat archive: single series at root, no subdirectory hierarchy
-      # find name of the series, if only 1 at root
-      series <- ""
-    } else {
-      series <- sapply(paths, paste, collapse = ".")
-    }
+    series <- if (is.null(keys_df) || nrow(keys_df) == 0) "" else keys_df$key
   }
-  # print(series)
 
   # --- build URLs and fetch ---
-  series_paths <- key_to_path(series)
   gh_urls <- generate_gh_url(
-    series_path    = series_paths,
+    series_path    = series,
     remote_archive = remote_archive,
     sha            = commit_sha
   )
