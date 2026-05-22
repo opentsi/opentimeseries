@@ -62,8 +62,5 @@ list_open_ts_keys <- function(remote_archive = "opentsi/ch.kof.globalbaro",
     return(invisible(NULL))
   }
 
-  data.frame(
-    key = sapply(valid_matches, "[[", 2),
-    stringsAsFactors = FALSE
-  )
+  sapply(valid_matches, "[[", 2)
 }
