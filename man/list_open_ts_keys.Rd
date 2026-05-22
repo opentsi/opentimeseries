@@ -4,17 +4,20 @@
 \alias{list_open_ts_keys}
 \title{List Available Time Series Keys from an Open Time Series Archive}
 \usage{
-list_open_ts_keys(remote_archive = "minnaheim/ch.kof.globalbaro")
+list_open_ts_keys(remote_archive = "opentsi/ch.kof.globalbaro", ref = "main")
 }
 \arguments{
 \item{remote_archive}{A character string specifying the GitHub repository
 in \code{"owner/repo"} format. Defaults to
-\code{"minnaheim/ch.kof.globalbaro"}.}
+\code{"opentsi/ch.kof.globalbaro"}.}
+
+\item{ref}{Git ref (branch, tag, or commit SHA) to read from. Defaults to
+\code{"main"}.}
 }
 \value{
 A data frame with a single column \code{key} containing the
-available time series keys. Returned invisibly. Returns \code{NULL}
-invisibly if no keys are found.
+available time series keys. Returns \code{NULL} invisibly if no keys
+are found.
 }
 \description{
 Fetches the index of available time series keys from a GitHub-hosted
@@ -22,12 +25,11 @@ open time series archive by reading its \code{data-raw/index.md} file.
 }
 \details{
 The function reads the \code{data-raw/index.md} file from the
-specified GitHub repository via the GitHub API and parses all markdown
-links under the \code{## Index of Time Series} header.
+specified GitHub repository and parses all markdown links under the
+\code{## Index of Time Series} header.
 }
 \examples{
 \dontrun{
-list_open_ts_keys()
 list_open_ts_keys("opentsi/ch.kof.globalbaro")
 }
 

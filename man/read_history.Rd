@@ -6,7 +6,7 @@
 \usage{
 read_history(
   series,
-  remote_archive = "opentsi/demo",
+  remote_archive = "opentsi/ch.kof.globalbaro",
   rbind_dt = TRUE,
   add_suffix = TRUE,
   wide = TRUE,
