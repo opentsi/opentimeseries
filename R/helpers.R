@@ -108,7 +108,9 @@ find_version <- function(
 #' @importFrom data.table dcast
 #' @export
 history_triangle <- function(dt) {
-  dcast(dt, formula = date ~ vintage_date, value.var = "value")
+  d <- dcast(dt, formula = date ~ vintage_date, value.var = "value")
+  names(d)[-1] <- format(as.Date(names(d)[-1]), "v%Y_%m_%d")
+  d
 }
 
 #' Pull the Latest Changes into a Local Archive Cache

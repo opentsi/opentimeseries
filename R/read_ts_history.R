@@ -18,8 +18,15 @@
 #'   include. Defaults to `NULL` (no lower bound).
 #' @param to `Date` or date-coercible string; latest vintage date to include.
 #'   Defaults to `Sys.Date()`.
-#' @param lastn integer; maximum number of commits to inspect. Defaults to
-#'   `20`. Values above 20 require `cache = TRUE`.
+#' @param lastn integer; number of vintages to return. Defaults to `20`.
+#'   Values above 20 require `cache = TRUE`.
+#' @param consolidate logical; if `TRUE` (default) only one vintage per period
+#'   (as defined by `by`) is returned — the most recent commit in that period.
+#'   Set to `FALSE` to get one vintage per calendar day with no further
+#'   consolidation.
+#' @param by character scalar; period to consolidate by when
+#'   `consolidate = TRUE`. One of `"month"` (default), `"quarter"`, `"year"`,
+#'   or `"day"`.
 #' @param cache logical; if `TRUE` the repository is cloned to `cache_dir`
 #'   and all reads are served from the local clone. Required for
 #'   `lastn > 20`. Defaults to `FALSE`.
@@ -67,12 +74,14 @@
 read_ts_history <- function(
   series,
   remote_archive = "opentsi/ch.kof.globalbaro",
-  from   = NULL,
-  to     = Sys.Date(),
-  lastn  = 20,
-  cache  = FALSE,
-  cache_dir = "~/.cache/opentimeseries",
-  update = FALSE
+  from        = NULL,
+  to          = Sys.Date(),
+  lastn       = 20,
+  consolidate = TRUE,
+  by          = "month",
+  cache       = FALSE,
+  cache_dir   = "~/.cache/opentimeseries",
+  update      = FALSE
 ) {
   # --- input validation ---
   if (!is.character(series) || length(series) != 1L || nchar(trimws(series)) == 0L) {
@@ -90,6 +99,18 @@ read_ts_history <- function(
   }
   if (anyNA(suppressWarnings(as.Date(as.character(to))))) {
     stop("`to` must be a valid date.")
+  }
+  by <- match.arg(by, c("month", "quarter", "year", "day"))
+
+  # --- period key helper ---
+  period_key <- function(dates) {
+    d <- as.Date(dates)
+    switch(by,
+      "day"     = format(d, "%Y-%m-%d"),
+      "month"   = format(d, "%Y-%m"),
+      "quarter" = paste0(format(d, "%Y"), "-Q", ceiling(as.integer(format(d, "%m")) / 3)),
+      "year"    = format(d, "%Y")
+    )
   }
 
   # --- remote-path threshold enforcement ---
@@ -151,7 +172,7 @@ read_ts_history <- function(
       git_pull(repo = repo_cache)
     }
 
-    log <- git_log(repo = repo_cache, max = lastn)
+    log <- git_log(repo = repo_cache, max = lastn * 5L)
 
     to_posix <- as.POSIXct(paste(as.character(to), "23:59:59"), tz = "UTC")
     log <- log[as.POSIXct(log$time, tz = "UTC") <= to_posix, ]
@@ -159,6 +180,10 @@ read_ts_history <- function(
       from_posix <- as.POSIXct(paste(as.character(from), "00:00:00"), tz = "UTC")
       log <- log[as.POSIXct(log$time, tz = "UTC") >= from_posix, ]
     }
+    # always dedup to one per calendar day first; then consolidate by period
+    log <- log[!duplicated(as.Date(log$time)), ]
+    if (consolidate) log <- log[!duplicated(period_key(log$time)), ]
+    log <- head(log, lastn)
 
     if (nrow(log) == 0L) {
       stop(sprintf(
@@ -196,7 +221,7 @@ read_ts_history <- function(
   # REMOTE / GITHUB API PATH
   # -------------------------------------------------------------------------
   commit_result <- tryCatch(
-    get_commit_dates(remote_archive = remote_archive, lastn = lastn),
+    get_commit_dates(remote_archive = remote_archive, lastn = lastn * 5L),
     error = function(e) {
       stop(sprintf(
         paste0(
@@ -217,6 +242,10 @@ read_ts_history <- function(
     from_posix <- as.POSIXct(paste(as.character(from), "00:00:00"), tz = "UTC")
     commits <- commits[as.POSIXct(commits$date, tz = "UTC") >= from_posix, ]
   }
+  # always dedup to one per calendar day first; then consolidate by period
+  commits <- commits[!duplicated(as.Date(commits$date)), ]
+  if (consolidate) commits <- commits[!duplicated(period_key(commits$date)), ]
+  commits <- head(commits, lastn)
 
   if (nrow(commits) == 0L) {
     stop(sprintf(

@@ -10,6 +10,8 @@ read_ts_history(
   from = NULL,
   to = Sys.Date(),
   lastn = 20,
+  consolidate = TRUE,
+  by = "month",
   cache = FALSE,
   cache_dir = "~/.cache/opentimeseries",
   update = FALSE
@@ -28,8 +30,17 @@ include. Defaults to \code{NULL} (no lower bound).}
 \item{to}{\code{Date} or date-coercible string; latest vintage date to include.
 Defaults to \code{Sys.Date()}.}
 
-\item{lastn}{integer; maximum number of commits to inspect. Defaults to
-\code{20}. Values above 20 require \code{cache = TRUE}.}
+\item{lastn}{integer; number of vintages to return. Defaults to \code{20}.
+Values above 20 require \code{cache = TRUE}.}
+
+\item{consolidate}{logical; if \code{TRUE} (default) only one vintage per period
+(as defined by \code{by}) is returned — the most recent commit in that period.
+Set to \code{FALSE} to get one vintage per calendar day with no further
+consolidation.}
+
+\item{by}{character scalar; period to consolidate by when
+\code{consolidate = TRUE}. One of \code{"month"} (default), \code{"quarter"}, \code{"year"},
+or \code{"day"}.}
 
 \item{cache}{logical; if \code{TRUE} the repository is cloned to \code{cache_dir}
 and all reads are served from the local clone. Required for
