@@ -7,7 +7,7 @@
 read_open_ts(
   series = NULL,
   date = Sys.Date(),
-  remote_archive = "opentsi",
+  remote_archive = "opentsi/ch.kof.globalbaro",
   rbind_dt = TRUE,
   wide = TRUE,
   add_suffix = FALSE,
@@ -25,8 +25,8 @@ which to retrieve the series. The function selects the most recent commit
 at or before this date. Defaults to \code{Sys.Date()}.}
 
 \item{remote_archive}{character scalar; the GitHub archive in
-\code{"owner/repo"} format (e.g. \code{"opentsi/kofethz"}). Defaults to
-\code{"opentsi"}.}
+\code{"owner/repo"} format (e.g. \code{"opentsi/ch.kof.kofbarometer"}). Defaults to
+\code{"opentsi/ch.kof.globalbaro"}.}
 
 \item{rbind_dt}{logical; if \code{TRUE} (default) the per-series \code{data.table}s
 are row-bound into a single \code{data.table}. If \code{FALSE} a named list is
