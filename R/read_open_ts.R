@@ -27,6 +27,15 @@
 #' @param show_vintage_dates logical; if `TRUE` two extra columns are added:
 #'   `query_date` (the value of `date`) and `commit_date` (the date of the
 #'   matched Git commit). Defaults to `FALSE`.
+#' @param cache logical; if `TRUE` the repository is cloned to `cache_dir`
+#'   once and all reads are served from the local clone. Recommended when
+#'   querying many series to avoid GitHub API rate limits. Defaults to `FALSE`.
+#' @param cache_dir character scalar; parent directory for the local clone.
+#'   A sub-directory named after the repository is created automatically.
+#'   Defaults to `"~/.cache/opentimeseries"`.
+#' @param update logical; if `TRUE` and the local clone already exists, a
+#'   `git pull` is run before reading. Ignored when `cache = FALSE`. Defaults
+#'   to `FALSE`.
 #'
 #' @return When `rbind_dt = TRUE` (default): a `data.table` with at least
 #'   columns `id`, `date`, and `value`. When `show_vintage_dates = TRUE` the
@@ -34,6 +43,8 @@
 #'   `rbind_dt = FALSE`: a named list of such `data.table`s, one per key.
 #'
 #' @importFrom data.table fread rbindlist setcolorder
+#' @importFrom gert git_clone git_log git_checkout git_pull
+#' @importFrom fs dir_create dir_exists path path_expand dir_ls
 #' @export
 #'
 #' @examples
@@ -47,13 +58,17 @@
 #'
 #' # Fetch multiple series as of a specific past date, with vintage columns
 #' dt <- read_open_ts(
-#'   series = c(
-#'     "coincident",
-#'     "leading"
-#'   ),
+#'   series = c("coincident", "leading"),
 #'   date = "2024-01-01",
 #'   remote_archive = "opentsi/ch.kof.globalbaro",
 #'   show_vintage_dates = TRUE
+#' )
+#'
+#' # Fetch all series from a local clone (avoids rate limits for large archives)
+#' dt <- read_open_ts(
+#'   date           = "2024-01-01",
+#'   remote_archive = "opentsi/ch.kof.globalbaro",
+#'   cache          = TRUE
 #' )
 #'
 #' # Return a named list instead of a single bound table
@@ -71,7 +86,10 @@ read_open_ts <- function(
   wide = TRUE,
   add_suffix = FALSE,
   lastn = 100,
-  show_vintage_dates = FALSE
+  show_vintage_dates = FALSE,
+  cache = FALSE,
+  cache_dir = "~/.cache/opentimeseries",
+  update = FALSE
 ) {
   # --- input validation ---
   if (!is.character(remote_archive) || length(remote_archive) != 1 ||
@@ -87,10 +105,101 @@ read_open_ts <- function(
       "Use a Date object (e.g. Sys.Date()) or an ISO string (e.g. \"2024-01-01\")."
     )
   }
-
   if (!is.null(series) && (!is.character(series) || length(series) == 0)) {
     stop("`series` must be a non-empty character vector of time series subkeys.")
   }
+
+  # -------------------------------------------------------------------------
+  # LOCAL CACHE PATH
+  # -------------------------------------------------------------------------
+  if (cache) {
+    repo_cache <- path(path_expand(cache_dir), basename(remote_archive))
+    dir_create(repo_cache, recurse = TRUE)
+
+    if (!dir_exists(path(repo_cache, ".git"))) {
+      message(sprintf(
+        "Cloning '%s' into local cache, this may take a moment...",
+        remote_archive
+      ))
+      git_clone(
+        url  = sprintf("https://github.com/%s", remote_archive),
+        path = repo_cache
+      )
+    } else if (update) {
+      git_pull(repo = repo_cache)
+    }
+
+    # --- find commit by date from local log ---
+    log    <- git_log(repo = repo_cache, max = lastn)
+    target <- as.POSIXct(paste(as.character(date), "23:59:59"), tz = "UTC")
+    valid  <- log[as.POSIXct(log$time, tz = "UTC") <= target, ]
+
+    if (nrow(valid) == 0L) {
+      stop(sprintf(
+        paste0(
+          "No commits found at or before '%s' in local clone of '%s'.\n",
+          "Try increasing `lastn` (currently %d)."
+        ),
+        as.Date(date), remote_archive, lastn
+      ))
+    }
+
+    commit_sha  <- valid$commit[1L]
+    commit_date <- as.Date(valid$time[1L])
+
+    git_checkout(branch = commit_sha, repo = repo_cache)
+
+    # --- resolve NULL series from local filesystem ---
+    if (is.null(series)) {
+      csv_files <- dir_ls(path(repo_cache, "data-raw", "csv"), glob = "*.csv")
+      series    <- sub("\\.csv$", "", basename(csv_files))
+    }
+
+    if (length(series) > 5L) {
+      warning(sprintf(
+        "%d series requested from local cache.",
+        length(series)
+      ), call. = FALSE)
+    }
+
+    # --- read locally ---
+    l <- vector("list", length(series))
+    for (i in seq_along(series)) {
+      csv_path <- path(repo_cache, "data-raw", "csv", paste0(series[i], ".csv"))
+      dt <- tryCatch(
+        {
+          result <- fread(csv_path)
+          if (!"value" %in% names(result)) stop("unexpected format: no 'value' column")
+          if ("time" %in% names(result) && !"date" %in% names(result)) {
+            names(result)[names(result) == "time"] <- "date"
+          }
+          result
+        },
+        error = function(e) {
+          stop(sprintf(
+            "Could not read series '%s' from local cache.\nPath: %s\nOriginal error: %s",
+            series[i], csv_path, conditionMessage(e)
+          ))
+        }
+      )
+      dt$id <- series[i]
+      if (show_vintage_dates) {
+        dt[, query_date  := as.Date(date)]
+        dt[, commit_date := commit_date]
+        setcolorder(dt, neworder = c("id", "query_date", "commit_date", "date", "value"))
+      } else {
+        setcolorder(dt, neworder = c("id", "date", "value"))
+      }
+      if (add_suffix) dt[, id := sprintf("%s.%s", dt$id, date)]
+      l[[i]] <- dt
+    }
+    names(l) <- series
+    return(if (rbind_dt) rbindlist(l) else l)
+  }
+
+  # -------------------------------------------------------------------------
+  # REMOTE / GITHUB API PATH
+  # -------------------------------------------------------------------------
 
   # --- resolve commit (also discovers the default branch) ---
   commit_result <- tryCatch(
@@ -107,7 +216,7 @@ read_open_ts <- function(
     }
   )
 
-  branch <- commit_result$branch
+  branch     <- commit_result$branch
   commit_res <- get_commit_by_date(commit_result$commits, d = date)
 
   if (nrow(commit_res) == 0) {
@@ -120,7 +229,7 @@ read_open_ts <- function(
     ))
   }
 
-  commit_sha <- commit_res$hash
+  commit_sha  <- commit_res$hash
   commit_date <- commit_res$date
 
   # --- resolve NULL series to all keys in archive ---
@@ -138,6 +247,16 @@ read_open_ts <- function(
       }
     )
     series <- if (is.null(keys_df) || nrow(keys_df) == 0) "" else keys_df$key
+  }
+
+  if (length(series) > 20L && !isTRUE(series == "")) {
+    warning(sprintf(
+      paste0(
+        "%d series requested via GitHub API (%d individual requests). ",
+        "Consider using cache = TRUE to avoid hitting rate limits."
+      ),
+      length(series), length(series)
+    ), call. = FALSE)
   }
 
   # --- build URLs and fetch ---
@@ -174,7 +293,7 @@ read_open_ts <- function(
     )
     dt$id <- if (nchar(series[i]) == 0) remote_archive else series[i]
     if (show_vintage_dates) {
-      dt[, query_date := as.Date(date)]
+      dt[, query_date  := as.Date(date)]
       dt[, commit_date := as.Date(commit_date)]
       setcolorder(dt, neworder = c("id", "query_date", "commit_date", "date", "value"))
     } else {
