@@ -43,7 +43,7 @@
 #'   `rbind_dt = FALSE`: a named list of such `data.table`s, one per key.
 #'
 #' @importFrom data.table fread rbindlist setcolorder
-#' @importFrom gert git_clone git_log git_checkout git_pull
+#' @importFrom gert git_clone git_log git_pull git_branch_list git_branch_delete git_branch_create
 #' @importFrom fs dir_create dir_exists path path_expand dir_ls
 #' @export
 #'
@@ -147,7 +147,11 @@ read_open_ts <- function(
     commit_sha  <- valid$commit[1L]
     commit_date <- as.Date(valid$time[1L])
 
-    git_checkout(branch = commit_sha, repo = repo_cache)
+    tmp_branch <- "opentimeseries-read"
+    if (tmp_branch %in% git_branch_list(repo = repo_cache)$name) {
+      git_branch_delete(tmp_branch, repo = repo_cache)
+    }
+    git_branch_create(tmp_branch, ref = commit_sha, checkout = TRUE, repo = repo_cache)
 
     # --- resolve NULL series from local filesystem ---
     if (is.null(series)) {
@@ -246,7 +250,7 @@ read_open_ts <- function(
         ))
       }
     )
-    series <- if (is.null(keys_df) || nrow(keys_df) == 0) "" else keys_df$key
+    series <- if (is.null(keys_df) || length(keys_df) == 0) "" else keys_df
   }
 
   if (length(series) > 20L && !isTRUE(series == "")) {

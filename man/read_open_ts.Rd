@@ -12,7 +12,10 @@ read_open_ts(
   wide = TRUE,
   add_suffix = FALSE,
   lastn = 100,
-  show_vintage_dates = FALSE
+  show_vintage_dates = FALSE,
+  cache = FALSE,
+  cache_dir = "~/.cache/opentimeseries",
+  update = FALSE
 )
 }
 \arguments{
@@ -45,6 +48,18 @@ fall outside the default window. Defaults to \code{100}.}
 \item{show_vintage_dates}{logical; if \code{TRUE} two extra columns are added:
 \code{query_date} (the value of \code{date}) and \code{commit_date} (the date of the
 matched Git commit). Defaults to \code{FALSE}.}
+
+\item{cache}{logical; if \code{TRUE} the repository is cloned to \code{cache_dir}
+once and all reads are served from the local clone. Recommended when
+querying many series to avoid GitHub API rate limits. Defaults to \code{FALSE}.}
+
+\item{cache_dir}{character scalar; parent directory for the local clone.
+A sub-directory named after the repository is created automatically.
+Defaults to \code{"~/.cache/opentimeseries"}.}
+
+\item{update}{logical; if \code{TRUE} and the local clone already exists, a
+\verb{git pull} is run before reading. Ignored when \code{cache = FALSE}. Defaults
+to \code{FALSE}.}
 }
 \value{
 When \code{rbind_dt = TRUE} (default): a \code{data.table} with at least
@@ -69,13 +84,17 @@ head(dt)
 
 # Fetch multiple series as of a specific past date, with vintage columns
 dt <- read_open_ts(
-  series = c(
-    "coincident",
-    "leading"
-  ),
+  series = c("coincident", "leading"),
   date = "2024-01-01",
   remote_archive = "opentsi/ch.kof.globalbaro",
   show_vintage_dates = TRUE
+)
+
+# Fetch all series from a local clone (avoids rate limits for large archives)
+dt <- read_open_ts(
+  date           = "2024-01-01",
+  remote_archive = "opentsi/ch.kof.globalbaro",
+  cache          = TRUE
 )
 
 # Return a named list instead of a single bound table
