@@ -94,15 +94,21 @@ find_version <- function(
 }
 
 
-#' Show Entire History of a Series in a Wide Format Table
+#' Pivot a Single-Series Version History into a Revision Triangle
 #'
+#' Takes the long-format output of \code{\link{read_ts_history}} (columns
+#' \code{id}, \code{vintage_date}, \code{date}, \code{value}) and pivots it
+#' wide so that each column is one vintage and each row is one observation date.
+#'
+#' @param dt a \code{data.table} as returned by \code{read_ts_history}.
+#'
+#' @return A wide \code{data.table} with \code{date} as the row key and one
+#'   column per \code{vintage_date}.
 #'
 #' @importFrom data.table dcast
 #' @export
-triangle <- function(dt) {
-  d <- dcast(dt, formula = date ~ id, value.var = "value")
-  names(d) <- gsub("(.+)(v[0-9]{4})", "\\2", names(d))
-  d
+history_triangle <- function(dt) {
+  dcast(dt, formula = date ~ vintage_date, value.var = "value")
 }
 
 #' Pull the Latest Changes into a Local Archive Cache

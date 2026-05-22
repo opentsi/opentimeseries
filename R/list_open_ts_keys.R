@@ -26,20 +26,25 @@
 #'
 #' @export
 list_open_ts_keys <- function(remote_archive = "opentsi/ch.kof.globalbaro",
-                              ref = "main") {
-  url <- sprintf(
-    "https://raw.githubusercontent.com/%s/%s/data-raw/index.md",
-    remote_archive, ref
-  )
+                              ref = NULL) {
+  branches <- if (is.null(ref)) c("main", "master") else ref
 
-  resp <- request(url) |>
-    req_error(is_error = \(r) FALSE) |>
-    req_perform()
+  resp <- NULL
+  for (branch in branches) {
+    url <- sprintf(
+      "https://raw.githubusercontent.com/%s/%s/data-raw/index.md",
+      remote_archive, branch
+    )
+    resp <- request(url) |>
+      req_error(is_error = \(r) FALSE) |>
+      req_perform()
+    if (resp$status_code == 200) break
+  }
 
   if (resp$status_code != 200) {
     stop(sprintf(
-      "Could not fetch index from '%s' (ref: %s, HTTP %d).",
-      remote_archive, ref, resp$status_code
+      "Could not fetch index from '%s' (tried: %s, last HTTP %d).",
+      remote_archive, paste(branches, collapse = ", "), resp$status_code
     ))
   }
 

@@ -4,13 +4,14 @@
 \alias{read_meta}
 \title{Read Metadata from Archive}
 \usage{
-read_meta(archive, ref = "main")
+read_meta(archive, ref = NULL)
 }
 \arguments{
 \item{archive}{Either a remote repository path (e.g., "opentsi/kofethz")
 or a local path to an archive directory or metadata.json file.}
 
-\item{ref}{Git ref (branch, tag, or commit) for remote archives. Defaults to "main".}
+\item{ref}{Git ref (branch, tag, or commit) for remote archives. Defaults
+to \code{NULL}, which tries \code{"main"} then \code{"master"}.}
 }
 \value{
 Metadata as a list.

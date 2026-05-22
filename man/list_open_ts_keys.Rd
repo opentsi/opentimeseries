@@ -4,7 +4,7 @@
 \alias{list_open_ts_keys}
 \title{List Available Time Series Keys from an Open Time Series Archive}
 \usage{
-list_open_ts_keys(remote_archive = "opentsi/ch.kof.globalbaro", ref = "main")
+list_open_ts_keys(remote_archive = "opentsi/ch.kof.globalbaro", ref = NULL)
 }
 \arguments{
 \item{remote_archive}{A character string specifying the GitHub repository

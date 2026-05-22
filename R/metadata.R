@@ -205,9 +205,11 @@ lookup_label <- function(segment, labels, lang) {
 #'
 #' @param archive Either a remote repository path (e.g., "opentsi/kofethz")
 #'   or a local path to an archive directory or metadata.json file.
-#' @param ref Git ref (branch, tag, or commit) for remote archives. Defaults to "main".
+#' @param ref Git ref (branch, tag, or commit) for remote archives. Defaults
+#'   to \code{NULL}, which tries \code{"main"} then \code{"master"}.
 #' @return Metadata as a list.
 #' @importFrom jsonlite fromJSON
+#' @importFrom httr2 request req_error req_perform resp_body_string
 #' @export
 #' @examples
 #' \dontrun{
@@ -220,9 +222,9 @@ lookup_label <- function(segment, labels, lang) {
 #' # Local JSON file directly
 #' meta <- read_meta("path/to/metadata.json")
 #' }
-read_meta <- function(archive, ref = "main") {
+read_meta <- function(archive, ref = NULL) {
 
- # Check if local path
+  # Check if local path
   if (file.exists(archive)) {
     # Direct JSON file
     if (grepl("\\.json$", archive)) {
@@ -237,11 +239,26 @@ read_meta <- function(archive, ref = "main") {
   }
 
   # Remote GitHub archive
-  url <- sprintf(
-    "https://raw.githubusercontent.com/%s/%s/inst/metadata.json",
-    archive,
-    ref
-  )
+  branches <- if (is.null(ref)) c("main", "master") else ref
 
-  fromJSON(url, simplifyVector = FALSE)
+  resp <- NULL
+  for (branch in branches) {
+    url <- sprintf(
+      "https://raw.githubusercontent.com/%s/%s/inst/metadata.json",
+      archive, branch
+    )
+    resp <- request(url) |>
+      req_error(is_error = \(r) FALSE) |>
+      req_perform()
+    if (resp$status_code == 200) break
+  }
+
+  if (resp$status_code != 200) {
+    stop(sprintf(
+      "Could not fetch metadata.json from '%s' (tried: %s, last HTTP %d).",
+      archive, paste(branches, collapse = ", "), resp$status_code
+    ))
+  }
+
+  fromJSON(resp_body_string(resp), simplifyVector = FALSE)
 }
