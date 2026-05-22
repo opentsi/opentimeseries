@@ -199,44 +199,6 @@ lookup_label <- function(segment, labels, lang) {
 `%||%` <- function(a, b) if (is.null(a)) b else a
 
 
-#' Update last_updated Timestamp in Metadata JSON
-#'
-#' Updates the last_updated field in metadata.json to current UTC time.
-#' Designed for use in GHA workflows after data updates. Works directly
-#' with JSON (no yaml dependency).
-#'
-#' @param json_path Path to the metadata JSON file.
-#'   Defaults to "inst/metadata.json".
-#' @return Invisibly returns the updated metadata as a list.
-#' @importFrom jsonlite fromJSON toJSON
-#' @export
-#' @examples
-#' \dontrun{
-#' # Update timestamp in default location
-#' update_last_updated()
-#'
-#' # Custom path
-#' update_last_updated("path/to/metadata.json")
-#' }
-update_last_updated <- function(json_path = "inst/metadata.json") {
-
-  if (!file.exists(json_path)) {
-    stop(sprintf("Metadata file not found: %s", json_path))
-  }
-
-  meta <- fromJSON(json_path, simplifyVector = FALSE)
-
-  meta$last_updated <- format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
-
-  json_content <- toJSON(meta, pretty = TRUE, auto_unbox = TRUE)
-  writeLines(json_content, json_path)
-
-  message(sprintf("Updated last_updated: %s", meta$last_updated))
-
-  invisible(meta)
-}
-
-
 #' Read Metadata from Archive
 #'
 #' Reads and parses metadata.json from a local or remote OpenTSI archive.

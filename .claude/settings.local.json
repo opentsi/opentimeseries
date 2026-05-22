@@ -4,7 +4,10 @@
       "Bash(curl -s \"https://api.github.com/repos/opentsi/ch.fso.besta/git/trees/32d8720426d713d58ba21f7919c1fc1461bb75fc?recursive=1\")",
       "Bash(python3 -c \"import json,sys; t=json.load\\(sys.stdin\\); [print\\(x['path']\\) for x in t.get\\('tree',[]\\) if 'data-raw/csv' in x['path']]\")",
       "Bash(curl -s \"https://api.github.com/repos/opentsi/ch.fso.besta/contents/data-raw/index.md\")",
-      "Bash(python3 -c ' *)"
+      "Bash(python3 -c ' *)",
+      "Bash(curl -s \"https://raw.githubusercontent.com/opentsi/ch.fso.indpau/main/data-raw/index.md\")",
+      "Bash(curl -s \"https://api.github.com/repos/opentsi/ch.fso.indpau/git/trees/main?recursive=1\")",
+      "Bash(python3 -c \"import json,sys; t=json.load\\(sys.stdin\\); [print\\(x['path']\\) for x in t['tree'] if x['path'].startswith\\('data-raw/csv'\\)]\")"
     ]
   }
 }
