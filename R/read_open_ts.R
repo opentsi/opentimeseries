@@ -137,7 +137,7 @@ read_open_ts <- function(
         ))
       }
     )
-    series <- if (is.null(keys_df) || nrow(keys_df) == 0) "" else keys_df$key
+    series <- if (length(keys_df) == 0) "" else keys_df
   }
 
   # --- build URLs and fetch ---
