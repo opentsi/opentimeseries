@@ -9,14 +9,15 @@ License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
     license
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.3.3
 Roxygen: list(markdown = TRUE)
-Imports: 
+Imports:
     data.table,
     digest,
+    gert,
     jsonlite,
     fs,
     httr2
 Suggests:
     testthat (>= 3.0.0),
     tsbox
+Config/roxygen2/version: 8.0.0

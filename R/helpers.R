@@ -105,6 +105,63 @@ triangle <- function(dt) {
   d
 }
 
+#' Pull the Latest Changes into a Local Archive Cache
+#'
+#' Runs `git pull` on a previously cloned archive. Call this to refresh the
+#' local cache without re-cloning from scratch. Equivalent to
+#' `read_open_ts(..., cache = TRUE, update = TRUE)` but usable independently.
+#'
+#' @param remote_archive character scalar in `"owner/repo"` format.
+#' @param cache_dir character scalar; parent cache directory.
+#'   Defaults to `"~/.cache/opentimeseries"`.
+#'
+#' @importFrom gert git_pull
+#' @importFrom fs path path_expand dir_exists
+#' @export
+update_cache <- function(remote_archive,
+                         cache_dir = "~/.cache/opentimeseries") {
+  repo_cache <- path(path_expand(cache_dir), basename(remote_archive))
+  if (!dir_exists(path(repo_cache, ".git"))) {
+    stop(sprintf(
+      "No local clone found for '%s'. Run read_open_ts() with cache = TRUE first.",
+      remote_archive
+    ))
+  }
+  git_pull(repo = repo_cache)
+  invisible(repo_cache)
+}
+
+
+#' Wipe the Local Cache for One or All Archives
+#'
+#' Deletes the local clone(s) from the cache directory. After wiping, the next
+#' call to `read_open_ts(..., cache = TRUE)` will re-clone automatically.
+#'
+#' @param remote_archive character scalar in `"owner/repo"` format, or `NULL`
+#'   (default) to wipe the entire cache directory.
+#' @param cache_dir character scalar; parent cache directory.
+#'   Defaults to `"~/.cache/opentimeseries"`.
+#'
+#' @importFrom fs path path_expand dir_exists dir_delete
+#' @export
+wipe_cache <- function(remote_archive = NULL,
+                       cache_dir = "~/.cache/opentimeseries") {
+  base <- path_expand(cache_dir)
+  target <- if (is.null(remote_archive)) {
+    base
+  } else {
+    path(base, basename(remote_archive))
+  }
+  if (!dir_exists(target)) {
+    message("Cache directory does not exist, nothing to wipe.")
+    return(invisible(NULL))
+  }
+  dir_delete(target)
+  message(sprintf("Wiped cache: %s", target))
+  invisible(NULL)
+}
+
+
 generate_gh_url <- function(
     series_path,
     base_url = "https://raw.githubusercontent.com/",
