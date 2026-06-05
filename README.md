@@ -4,6 +4,10 @@
 # Open Time Series: Human-Friendly, Machine Readable Time Series
 
 <!-- badges: start -->
+
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/opentsi/opentimeseries)
 <!-- badges: end -->
 
 The primary goal of the opentimeseries R package is to conveniently read
@@ -29,22 +33,22 @@ Given a unique time series identifier and a GitHub repo,
 
 ``` r
 library(opentimeseries)
-a <- read_open_ts("ch.kof.globalbaro.leading",
-                  remote_archive = "opentsi/kofethz")
+a <- read_open_ts("leading",
+                  remote_archive = "opentsi/ch.kof.globalbaro")
 a
-#>                             id       date     value
-#>                         <char>     <Date>     <num>
-#>   1: ch.kof.globalbaro.leading 1991-07-01 107.81518
-#>   2: ch.kof.globalbaro.leading 1991-08-01 100.85396
-#>   3: ch.kof.globalbaro.leading 1991-09-01 103.00739
-#>   4: ch.kof.globalbaro.leading 1991-10-01 103.03732
-#>   5: ch.kof.globalbaro.leading 1991-11-01 111.22218
-#>  ---                                               
-#> 381: ch.kof.globalbaro.leading 2023-03-01  95.01878
-#> 382: ch.kof.globalbaro.leading 2023-04-01  93.80463
-#> 383: ch.kof.globalbaro.leading 2023-05-01  94.84820
-#> 384: ch.kof.globalbaro.leading 2023-06-01  91.14499
-#> 385: ch.kof.globalbaro.leading 2023-07-01  93.17270
+#>           id       date    value
+#>       <char>     <IDat>    <num>
+#>   1: leading 1991-07-01 101.5254
+#>   2: leading 1991-08-01 101.6025
+#>   3: leading 1991-09-01 101.8892
+#>   4: leading 1991-10-01 103.5929
+#>   5: leading 1991-11-01 101.8006
+#>  ---                            
+#> 415: leading 2026-01-01 101.1284
+#> 416: leading 2026-02-01 101.6809
+#> 417: leading 2026-03-01 100.7737
+#> 418: leading 2026-04-01 101.7341
+#> 419: leading 2026-05-01 100.3021
 ```
 
 By specifying a date in addition, you can able to obtain other versions
@@ -53,7 +57,7 @@ the most recent release that was available at the selected date.
 
 ``` r
 
-a202307 <- read_open_ts("ch.kof.globalbaro.leading",
+a202307 <- read_open_ts("leading", remote_archive = "opentsi/ch.kof.globalbaro",
                         date = "2023-07-01")
 ```
 
@@ -69,7 +73,7 @@ ts_plot(rbind(a202307,a))
 #> [time]: 'date'
 ```
 
-<img src="man/figures/README-unnamed-chunk-4-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-4-1.png" alt="" width="100%" />
 
 ## Get Entire History of a Time Series
 
@@ -83,17 +87,16 @@ versions.
 
 ``` r
 
-hist_triangle <- read_history("ch.kof.globalbaro.leading",
- remote_archive = "opentsi/kofethz", lastn = 5)
+hist_triangle <- read_ts_history("leading",
+ remote_archive = "opentsi/ch.kof.globalbaro", lastn = 5)
 
 tail(hist_triangle)
-#> Key: <date>
-#>          date v2025-02-01 v2025-03-01 v2025-04-01 v2025-05-01 v2025-06-01
-#>        <Date>       <num>       <num>       <num>       <num>       <num>
-#> 1: 2024-01-01    111.4755   111.93393   112.22277   112.43953   112.40559
-#> 2: 2024-02-01    105.5114   104.87135   105.00907   105.40360   105.42741
-#> 3: 2024-03-01          NA    99.14223    98.91744    98.99472    99.09614
-#> 4: 2024-04-01          NA          NA   101.05006   101.19983   101.32582
-#> 5: 2024-05-01          NA          NA          NA   102.78880   102.89490
-#> 6: 2024-06-01          NA          NA          NA          NA   103.87232
+#>         id vintage_date       date    value
+#>     <char>       <Date>     <IDat>    <num>
+#> 1: leading   2026-01-10 2025-08-01 102.3667
+#> 2: leading   2026-01-10 2025-09-01 103.0842
+#> 3: leading   2026-01-10 2025-10-01 102.6744
+#> 4: leading   2026-01-10 2025-11-01 100.0222
+#> 5: leading   2026-01-10 2025-12-01 101.5901
+#> 6: leading   2026-01-10 2026-01-01 102.0589
 ```

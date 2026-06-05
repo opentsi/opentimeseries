@@ -16,6 +16,8 @@ knitr::opts_chunk$set(
 # Open Time Series: Human-Friendly, Machine Readable Time Series
 
 <!-- badges: start -->
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/opentsi/opentimeseries)
 <!-- badges: end -->
 
 The primary goal of the opentimeseries R package is to conveniently
@@ -42,8 +44,8 @@ will return a time series and long format `data.table`.
 
 ```{r example}
 library(opentimeseries)
-a <- read_open_ts("ch.kof.globalbaro.leading",
-                  remote_archive = "opentsi/kofethz")
+a <- read_open_ts("leading",
+                  remote_archive = "opentsi/ch.kof.globalbaro")
 a
 ```
 
@@ -53,7 +55,7 @@ the most recent release that was available at the selected date.
 
 ```{r}
 
-a202307 <- read_open_ts("ch.kof.globalbaro.leading",
+a202307 <- read_open_ts("leading", remote_archive = "opentsi/ch.kof.globalbaro",
                         date = "2023-07-01")
 
 ```
@@ -85,8 +87,8 @@ extraction to the last couple of versions.
 
 ```{r}
 
-hist_triangle <- read_history("ch.kof.globalbaro.leading",
- remote_archive = "opentsi/kofethz", lastn = 5)
+hist_triangle <- read_ts_history("leading",
+ remote_archive = "opentsi/ch.kof.globalbaro", lastn = 5)
 
 tail(hist_triangle)
 
