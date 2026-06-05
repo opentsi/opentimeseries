@@ -90,7 +90,7 @@ extraction to the last couple of versions.
 hist_triangle <- read_ts_history("leading",
  remote_archive = "opentsi/ch.kof.globalbaro", lastn = 5)
 
-tail(hist_triangle)
+history_triangle(hist_triangle)
 
 
 ```
