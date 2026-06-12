@@ -1,39 +1,54 @@
-
-#' List Available Time Series Keys from an Open Time Series Archive
+#' List Available Time Series in a Dataset
 #'
-#' Fetches the index of available time series keys from a GitHub-hosted
-#' open time series archive by reading its \code{data-raw/index.md} file.
+#' Returns the series identifiers available in a dataset, either from a
+#' GitHub-hosted archive or from a local archive created with
+#' \code{\link{write_local_open_ts}}.
 #'
-#' @param remote_archive A character string specifying the GitHub repository
-#'   in \code{"owner/repo"} format. Defaults to
-#'   \code{"opentsi/ch.kof.globalbaro"}.
-#' @param ref Git ref (branch, tag, or commit SHA) to read from. Defaults to
-#'   \code{"main"}.
+#' @param dataset Character scalar. For remote archives: the GitHub repository
+#'   in \code{"owner/repo"} format (e.g. \code{"opentsi/ch.kof.globalbaro"}).
+#'   For local archives: the dataset name (e.g. \code{"ch.kof.globalbaro"}).
+#' @param archive_path Character scalar or \code{NULL} (default). When
+#'   \code{NULL} the function reads from the remote GitHub archive. When a path
+#'   is supplied it reads from the local archive at
+#'   \code{archive_path/dataset/data-raw/csv/}.
+#' @param ref Git ref (branch, tag, or commit SHA) for remote archives.
+#'   Defaults to \code{NULL}, which tries \code{"main"} then \code{"master"}.
+#'   Ignored for local archives.
 #'
-#' @return A data frame with a single column \code{key} containing the
-#'   available time series keys. Returns \code{NULL} invisibly if no keys
-#'   are found.
-#'
-#' @details The function reads the \code{data-raw/index.md} file from the
-#'   specified GitHub repository and parses all markdown links under the
-#'   \code{## Index of Time Series} header.
+#' @return A character vector of series identifiers.
 #'
 #' @importFrom httr2 request req_error req_perform resp_body_string
+#' @importFrom fs dir_exists dir_ls path path_expand
+#' @export
+#'
 #' @examples
 #' \dontrun{
-#' list_open_ts_keys("opentsi/ch.kof.globalbaro")
-#' }
+#' # Remote
+#' list_series("opentsi/ch.kof.globalbaro")
 #'
-#' @export
-list_open_ts_keys <- function(remote_archive = "opentsi/ch.kof.globalbaro",
-                              ref = NULL) {
+#' # Local
+#' list_series("ch.kof.globalbaro", archive_path = "~/.local_archives")
+#' }
+list_series <- function(dataset, archive_path = NULL, ref = NULL) {
+  if (!is.null(archive_path)) {
+    csv_dir <- path(path_expand(archive_path), dataset, "data-raw", "csv")
+    if (!dir_exists(csv_dir)) {
+      stop(sprintf(
+        "No local archive found for dataset '%s' in '%s'.",
+        dataset, path_expand(archive_path)
+      ))
+    }
+    csv_files <- dir_ls(csv_dir, glob = "*.csv")
+    return(sub("\\.csv$", "", basename(csv_files)))
+  }
+
   branches <- if (is.null(ref)) c("main", "master") else ref
 
   resp <- NULL
   for (branch in branches) {
     url <- sprintf(
       "https://raw.githubusercontent.com/%s/%s/data-raw/index.md",
-      remote_archive, branch
+      dataset, branch
     )
     resp <- request(url) |>
       req_error(is_error = \(r) FALSE) |>
@@ -44,7 +59,7 @@ list_open_ts_keys <- function(remote_archive = "opentsi/ch.kof.globalbaro",
   if (resp$status_code != 200) {
     stop(sprintf(
       "Could not fetch index from '%s' (tried: %s, last HTTP %d).",
-      remote_archive, paste(branches, collapse = ", "), resp$status_code
+      dataset, paste(branches, collapse = ", "), resp$status_code
     ))
   }
 

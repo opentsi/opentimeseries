@@ -11,7 +11,7 @@ experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](h
 <!-- badges: end -->
 
 The primary goal of the opentimeseries R package is to conveniently read
-time series and there meta information from *opentsi* style archives.
+time series and their meta information from *opentsi* style archives.
 While Open Time Series Initiative archives use git to manage different
 versions of time series and GitHub as a remote data store, reading data
 does not require git to be installed on your local machine.
@@ -90,7 +90,7 @@ versions.
 hist_triangle <- read_ts_history("leading",
  remote_archive = "opentsi/ch.kof.globalbaro", lastn = 5)
 
-history_triangle(hist_triangle)
+triangle_ts_history(hist_triangle)
 #> Key: <date>
 #>            date v2026_01_10 v2026_02_10 v2026_03_10 v2026_04_24 v2026_05_15
 #>          <IDat>       <num>       <num>       <num>       <num>       <num>

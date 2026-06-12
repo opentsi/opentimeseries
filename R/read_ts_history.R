@@ -14,6 +14,13 @@
 #'   (e.g. `"coincident"`). Must be length 1.
 #' @param remote_archive character scalar; the GitHub archive in
 #'   `"owner/repo"` format. Defaults to `"opentsi/ch.kof.globalbaro"`.
+#'   Ignored when \code{archive_path} is supplied.
+#' @param dataset character scalar; the dataset identifier for a local archive
+#'   (e.g. \code{"ch.kof.globalbaro"}). Required when \code{archive_path} is
+#'   set.
+#' @param archive_path character scalar or \code{NULL} (default). When
+#'   supplied, reads from the local archive at
+#'   \code{archive_path/dataset} instead of GitHub.
 #' @param from `Date` or date-coercible string; earliest vintage date to
 #'   include. Defaults to `NULL` (no lower bound).
 #' @param to `Date` or date-coercible string; latest vintage date to include.
@@ -74,9 +81,11 @@
 read_ts_history <- function(
   series,
   remote_archive = "opentsi/ch.kof.globalbaro",
+  dataset     = NULL,
+  archive_path = NULL,
   from        = NULL,
   to          = Sys.Date(),
-  lastn       = 20,
+  lastn       = 100,
   consolidate = TRUE,
   by          = "month",
   cache       = FALSE,
@@ -113,6 +122,86 @@ read_ts_history <- function(
     )
   }
 
+  # --- internal helper: read one CSV source and attach metadata ---
+  read_vintage <- function(csv_source, vintage_date, series_id) {
+    dt <- tryCatch(
+      {
+        result <- fread(csv_source, showProgress = FALSE)
+        if (!"value" %in% names(result)) stop("no 'value' column")
+        if ("time" %in% names(result) && !"date" %in% names(result)) {
+          names(result)[names(result) == "time"] <- "date"
+        }
+        result
+      },
+      error = function(e) NULL
+    )
+    if (is.null(dt)) return(NULL)
+    dt[, id           := series_id]
+    dt[, vintage_date := as.Date(vintage_date)]
+    setcolorder(dt, c("id", "vintage_date", "date", "value"))
+    dt
+  }
+
+  # -------------------------------------------------------------------------
+  # LOCAL ARCHIVE PATH
+  # -------------------------------------------------------------------------
+  if (!is.null(archive_path)) {
+    if (is.null(dataset) || !nzchar(dataset)) {
+      stop("`dataset` is required when `archive_path` is supplied.")
+    }
+    repo_path <- path(path_expand(archive_path), dataset)
+    if (!dir_exists(path(repo_path, ".git"))) {
+      stop(sprintf(
+        "No local archive found for dataset '%s' at '%s'. Run write_local_open_ts() first.",
+        dataset, path_expand(archive_path)
+      ))
+    }
+
+    all_branches   <- git_branch_list(repo = repo_path)$name
+    default_branch <- all_branches[all_branches %in% c("main", "master")][1L]
+    log <- git_log(repo = repo_path, ref = default_branch, max = 10000L)
+    log <- log[order(as.POSIXct(log$time, tz = "UTC"), decreasing = TRUE), ]
+
+    to_posix <- as.POSIXct(paste(as.character(to), "23:59:59"), tz = "UTC")
+    log <- log[as.POSIXct(log$time, tz = "UTC") <= to_posix, ]
+    if (!is.null(from)) {
+      from_posix <- as.POSIXct(paste(as.character(from), "00:00:00"), tz = "UTC")
+      log <- log[as.POSIXct(log$time, tz = "UTC") >= from_posix, ]
+    }
+    log <- log[!duplicated(as.Date(log$time, tz = "UTC")), ]
+    if (consolidate) log <- log[!duplicated(period_key(log$time)), ]
+    log <- head(log, lastn)
+
+    if (nrow(log) == 0L) {
+      stop(sprintf(
+        "No commits found in the specified date range for '%s' in '%s'.",
+        series, dataset
+      ))
+    }
+
+    tmp_branch <- "opentimeseries-read"
+    if (tmp_branch %in% git_branch_list(repo = repo_path)$name) {
+      git_branch_checkout(tmp_branch, repo = repo_path)
+      git_reset_hard(log$commit[1L], repo = repo_path)
+    } else {
+      git_branch_create(tmp_branch, ref = log$commit[1L], checkout = TRUE,
+                        repo = repo_path)
+    }
+
+    l <- vector("list", nrow(log))
+    for (i in seq_len(nrow(log))) {
+      git_reset_hard(log$commit[i], repo = repo_path)
+      csv_path <- path(repo_path, "data-raw", "csv", paste0(series, ".csv"))
+      l[[i]] <- read_vintage(csv_path, as.Date(log$time[i], tz = "UTC"), series)
+    }
+
+    result <- rbindlist(Filter(Negate(is.null), l))
+    if (nrow(result) == 0L) {
+      stop(sprintf("Series '%s' was not found in any commit in '%s'.", series, dataset))
+    }
+    return(result)
+  }
+
   # --- remote-path threshold enforcement ---
   if (!cache) {
     if (lastn > 20L) {
@@ -130,26 +219,6 @@ read_ts_history <- function(
         lastn, lastn
       ), call. = FALSE)
     }
-  }
-
-  # --- internal helper: read one CSV source and attach metadata ---
-  read_vintage <- function(csv_source, vintage_date, series_id) {
-    dt <- tryCatch(
-      {
-        result <- fread(csv_source, showProgress = FALSE)
-        if (!"value" %in% names(result)) stop("no 'value' column")
-        if ("time" %in% names(result) && !"date" %in% names(result)) {
-          names(result)[names(result) == "time"] <- "date"
-        }
-        result
-      },
-      error = function(e) NULL  # series may not exist in early commits
-    )
-    if (is.null(dt)) return(NULL)
-    dt[, id           := series_id]
-    dt[, vintage_date := as.Date(vintage_date)]
-    setcolorder(dt, c("id", "vintage_date", "date", "value"))
-    dt
   }
 
   # -------------------------------------------------------------------------

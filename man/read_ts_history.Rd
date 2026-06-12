@@ -7,9 +7,11 @@
 read_ts_history(
   series,
   remote_archive = "opentsi/ch.kof.globalbaro",
+  dataset = NULL,
+  archive_path = NULL,
   from = NULL,
   to = Sys.Date(),
-  lastn = 20,
+  lastn = 100,
   consolidate = TRUE,
   by = "month",
   cache = FALSE,
@@ -22,7 +24,16 @@ read_ts_history(
 (e.g. \code{"coincident"}). Must be length 1.}
 
 \item{remote_archive}{character scalar; the GitHub archive in
-\code{"owner/repo"} format. Defaults to \code{"opentsi/ch.kof.globalbaro"}.}
+\code{"owner/repo"} format. Defaults to \code{"opentsi/ch.kof.globalbaro"}.
+Ignored when \code{archive_path} is supplied.}
+
+\item{dataset}{character scalar; the dataset identifier for a local archive
+(e.g. \code{"ch.kof.globalbaro"}). Required when \code{archive_path} is
+set.}
+
+\item{archive_path}{character scalar or \code{NULL} (default). When
+supplied, reads from the local archive at
+\code{archive_path/dataset} instead of GitHub.}
 
 \item{from}{\code{Date} or date-coercible string; earliest vintage date to
 include. Defaults to \code{NULL} (no lower bound).}

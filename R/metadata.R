@@ -1,17 +1,3 @@
-#' Get All Keys from Metadata
-#'
-#' Extracts all full time series keys from the metadata.
-#' Keys are derived from the hierarchy if present, otherwise from
-#' labels$dimnames (excluding dimensions listed in dim_order).
-#'
-#' @param meta Metadata as a list (from read_meta()).
-#' @return Character vector of full keys.
-#' @export
-#' @examples
-#' \dontrun{
-#' meta <- read_meta("opentsi/kofethz")
-#' get_keys(meta)
-#' }
 get_keys <- function(meta) {
 
   check_meta(meta)
@@ -29,20 +15,6 @@ get_keys <- function(meta) {
 }
 
 
-#' Resolve Metadata to Key-Label Mappings
-#'
-#' Maps all keys to their human-readable labels.
-#'
-#' @param meta Metadata as a list (from read_meta()).
-#' @param lang Language code for labels (default "en").
-#' @return A data.frame with columns: key, label_full, label_short.
-#' @export
-#' @examples
-#' \dontrun{
-#' meta <- read_meta("opentsi/kofethz")
-#' resolve_meta(meta)
-#' resolve_meta(meta, lang = "de")
-#' }
 resolve_meta <- function(meta, lang = "en") {
 
   check_meta(meta)
@@ -90,14 +62,6 @@ resolve_meta <- function(meta, lang = "en") {
 }
 
 
-#' Print Resolved Metadata
-#'
-#' Prints key-label mappings in a readable format.
-#'
-#' @param resolved Output from resolve_meta().
-#' @param format Either "full" or "short".
-#' @return Invisibly returns the input.
-#' @export
 print_resolved <- function(resolved, format = c("full", "short")) {
 
   format <- match.arg(format)
@@ -137,7 +101,7 @@ get_paths <- function(meta) {
 
 check_meta <- function(meta) {
   if (!is.list(meta)) {
-    stop("meta must be a list (from read_meta())")
+    stop("meta must be a list (output of read_metadata())")
   }
   for (f in c("country", "provider", "dataset")) {
     if (is.null(meta[[f]]) || meta[[f]] == "") {
@@ -214,15 +178,15 @@ lookup_label <- function(segment, labels, lang) {
 #' @examples
 #' \dontrun{
 #' # Remote
-#' meta <- read_meta("opentsi/kofethz")
+#' meta <- read_metadata("opentsi/kofethz")
 #'
 #' # Local archive directory
-#' meta <- read_meta("path/to/my.dataset")
+#' meta <- read_metadata("path/to/my.dataset")
 #'
 #' # Local JSON file directly
-#' meta <- read_meta("path/to/metadata.json")
+#' meta <- read_metadata("path/to/metadata.json")
 #' }
-read_meta <- function(archive, ref = NULL) {
+read_metadata <- function(archive, ref = NULL) {
 
   # Check if local path
   if (file.exists(archive)) {

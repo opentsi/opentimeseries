@@ -46,8 +46,8 @@ for the right version. Increase this value when querying old dates that
 fall outside the default window. Defaults to \code{100}.}
 
 \item{show_vintage_dates}{logical; if \code{TRUE} two extra columns are added:
-\code{query_date} (the value of \code{date}) and \code{commit_date} (the date of the
-matched Git commit). Defaults to \code{FALSE}.}
+\code{vintage_date} (the Git commit author date of the matched snapshot).
+Defaults to \code{FALSE}.}
 
 \item{cache}{logical; if \code{TRUE} the repository is cloned to \code{cache_dir}
 once and all reads are served from the local clone. Recommended when
@@ -64,7 +64,7 @@ to \code{FALSE}.}
 \value{
 When \code{rbind_dt = TRUE} (default): a \code{data.table} with at least
 columns \code{id}, \code{date}, and \code{value}. When \code{show_vintage_dates = TRUE} the
-columns \code{query_date} and \code{commit_date} are prepended. When
+the column \code{vintage_date} is prepended. When
 \code{rbind_dt = FALSE}: a named list of such \code{data.table}s, one per key.
 }
 \description{

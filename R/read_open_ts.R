@@ -25,8 +25,8 @@
 #'   for the right version. Increase this value when querying old dates that
 #'   fall outside the default window. Defaults to `100`.
 #' @param show_vintage_dates logical; if `TRUE` two extra columns are added:
-#'   `query_date` (the value of `date`) and `commit_date` (the date of the
-#'   matched Git commit). Defaults to `FALSE`.
+#'   `vintage_date` (the Git commit author date of the matched snapshot).
+#'   Defaults to `FALSE`.
 #' @param cache logical; if `TRUE` the repository is cloned to `cache_dir`
 #'   once and all reads are served from the local clone. Recommended when
 #'   querying many series to avoid GitHub API rate limits. Defaults to `FALSE`.
@@ -39,7 +39,7 @@
 #'
 #' @return When `rbind_dt = TRUE` (default): a `data.table` with at least
 #'   columns `id`, `date`, and `value`. When `show_vintage_dates = TRUE` the
-#'   columns `query_date` and `commit_date` are prepended. When
+#'   the column `vintage_date` is prepended. When
 #'   `rbind_dt = FALSE`: a named list of such `data.table`s, one per key.
 #'
 #' @importFrom data.table fread rbindlist setcolorder
@@ -190,9 +190,8 @@ read_open_ts <- function(
       )
       dt$id <- series[i]
       if (show_vintage_dates) {
-        dt[, query_date  := as.Date(date)]
-        dt[, commit_date := commit_date]
-        setcolorder(dt, neworder = c("id", "query_date", "commit_date", "date", "value"))
+        dt[, vintage_date := commit_date]
+        setcolorder(dt, neworder = c("id", "vintage_date", "date", "value"))
       } else {
         setcolorder(dt, neworder = c("id", "date", "value"))
       }
@@ -241,7 +240,7 @@ read_open_ts <- function(
   # --- resolve NULL series to all keys in archive ---
   if (is.null(series)) {
     keys_df <- tryCatch(
-      list_open_ts_keys(remote_archive, ref = branch),
+      list_series(remote_archive, ref = branch),
       error = function(e) {
         stop(sprintf(
           paste0(

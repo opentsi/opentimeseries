@@ -5,18 +5,18 @@ library(data.table)
 # ---------------------------------------------------------------------------
 
 test_that("key_to_path converts dot-separated keys to file paths", {
-  expect_equal(key_to_path("ch.kof.globalbaro.coincident"),
+  expect_equal(opentimeseries:::key_to_path("ch.kof.globalbaro.coincident"),
                "ch/kof/globalbaro/coincident")
-  expect_equal(key_to_path(c("a.b.c", "x.y.z")),
+  expect_equal(opentimeseries:::key_to_path(c("a.b.c", "x.y.z")),
                c("a/b/c", "x/y/z"))
   # Single-segment key
-  expect_equal(key_to_path("onlyone"), "onlyone")
+  expect_equal(opentimeseries:::key_to_path("onlyone"), "onlyone")
 })
 
 test_that("get_commit_dates returns a list with $commits and $branch", {
   skip_if_offline()
 
-  result <- get_commit_dates("minnaheim/ch.kof.barometer", lastn = 5)
+  result <- opentimeseries:::get_commit_dates("minnaheim/ch.kof.barometer", lastn = 5)
 
   expect_type(result, "list")
   expect_named(result, c("commits", "branch"))
@@ -31,7 +31,7 @@ test_that("get_commit_by_date returns the latest commit before the date", {
     date = as.POSIXct(c("2023-01-01", "2023-06-01", "2024-01-01"))
   )
 
-  res <- get_commit_by_date(commits, d = as.Date("2023-07-01"))
+  res <- opentimeseries:::get_commit_by_date(commits, d = as.Date("2023-07-01"))
   expect_equal(res$hash, "sha_mid")
 })
 
@@ -40,7 +40,7 @@ test_that("get_commit_by_date returns empty when date precedes all commits", {
     hash = c("sha_a", "sha_b"),
     date = as.POSIXct(c("2024-01-01", "2024-06-01"))
   )
-  res <- get_commit_by_date(commits, d = as.Date("2020-01-01"))
+  res <- opentimeseries:::get_commit_by_date(commits, d = as.Date("2020-01-01"))
   expect_equal(nrow(res), 0)
 })
 
@@ -136,7 +136,7 @@ test_that("read_open_ts returns a list when rbind_dt = FALSE", {
   expect_s3_class(lst[[1]], "data.table")
 })
 
-test_that("show_vintage_dates adds query_date and commit_date columns", {
+test_that("show_vintage_dates adds vintage_date column", {
   skip_if_offline()
 
   dt <- read_open_ts(
@@ -145,9 +145,10 @@ test_that("show_vintage_dates adds query_date and commit_date columns", {
     show_vintage_dates = TRUE
   )
 
-  expect_true(all(c("id", "query_date", "commit_date", "value") %in% names(dt)))
-  expect_s3_class(dt$query_date,  "Date")
-  expect_s3_class(dt$commit_date, "Date")
+  expect_true(all(c("id", "vintage_date", "date", "value") %in% names(dt)))
+  expect_false("query_date" %in% names(dt))
+  expect_false("commit_date" %in% names(dt))
+  expect_s3_class(dt$vintage_date, "Date")
 })
 
 test_that("add_suffix appends the date to the id", {
