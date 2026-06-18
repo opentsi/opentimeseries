@@ -19,7 +19,7 @@ compare_checksums <- function(rq_checksum){
 }
 
 
-#' @importFrom jsonlite fromJSON
+#' @importFrom jsonlite fromJSON toJSON
 #' @export
 update_checksum <- function(cs, json_path="inst/metadata.json"){
   if (file.exists(json_path)) {
