@@ -1,5 +1,6 @@
 
 #' @importFrom digest digest
+#' @export
 is_update_needed <- function(checksum_input){
 
   request_checksum <- digest(checksum_input, algo = "sha256")
@@ -19,6 +20,7 @@ compare_checksums <- function(rq_checksum){
 
 
 #' @importFrom jsonlite fromJSON
+#' @export
 update_checksum <- function(cs, json_path="inst/metadata.json"){
   if (file.exists(json_path)) {
     mi <- fromJSON(json_path)

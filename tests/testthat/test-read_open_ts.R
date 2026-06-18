@@ -1,5 +1,20 @@
 library(data.table)
 
+# extra method that checks if github rate limit reached then doesnt 
+# test the online mehtods (github api) s.t. i dont get errors
+skip_if_api_rate_limited <- function() {
+  resp <- httr2::request("https://api.github.com/rate_limit") |>
+    httr2::req_error(is_error = \(r) FALSE) |>
+    httr2::req_perform()
+  if (resp$status_code == 403) {
+    skip("GitHub API rate-limited (HTTP 403)")
+  }
+  remaining <- httr2::resp_body_json(resp)$rate$remaining
+  if (!is.null(remaining) && remaining < 5L) {
+    skip(sprintf("GitHub API nearly exhausted (%d requests remaining)", remaining))
+  }
+}
+
 # ---------------------------------------------------------------------------
 # Helpers used by read_open_ts (unit tests – no network required)
 # ---------------------------------------------------------------------------
@@ -15,8 +30,9 @@ test_that("key_to_path converts dot-separated keys to file paths", {
 
 test_that("get_commit_dates returns a list with $commits and $branch", {
   skip_if_offline()
+  skip_if_api_rate_limited()
 
-  result <- opentimeseries:::get_commit_dates("minnaheim/ch.kof.barometer", lastn = 5)
+  result <- opentimeseries:::get_commit_dates("opentsi/ch.kof.barometer", lastn = 5)
 
   expect_type(result, "list")
   expect_named(result, c("commits", "branch"))
@@ -50,6 +66,7 @@ test_that("get_commit_by_date returns empty when date precedes all commits", {
 
 test_that("read_open_ts with series = NULL fetches all series from archive", {
   skip_if_offline()
+  skip_if_api_rate_limited()
 
   dt <- read_open_ts(remote_archive = "opentsi/ch.kof.globalbaro")
 
@@ -110,6 +127,7 @@ test_that("read_open_ts errors when remote_archive is not a single string", {
 
 test_that("read_open_ts returns a data.table for a known series", {
   skip_if_offline()
+  skip_if_api_rate_limited()
 
   dt <- read_open_ts(
     series         = "coincident",
@@ -124,6 +142,7 @@ test_that("read_open_ts returns a data.table for a known series", {
 
 test_that("read_open_ts returns a list when rbind_dt = FALSE", {
   skip_if_offline()
+  skip_if_api_rate_limited()
 
   lst <- read_open_ts(
     series         = "coincident",
@@ -138,6 +157,7 @@ test_that("read_open_ts returns a list when rbind_dt = FALSE", {
 
 test_that("show_vintage_dates adds vintage_date column", {
   skip_if_offline()
+  skip_if_api_rate_limited()
 
   dt <- read_open_ts(
     series             = "coincident",
@@ -151,23 +171,25 @@ test_that("show_vintage_dates adds vintage_date column", {
   expect_s3_class(dt$vintage_date, "Date")
 })
 
-test_that("add_suffix appends the date to the id", {
+test_that("addsuffix appends the date to the id", {
   skip_if_offline()
+  skip_if_api_rate_limited()
 
   query_date <- as.Date("2024-01-01")
   dt <- read_open_ts(
     series         = "barometer",
     date           = query_date,
-    remote_archive = "minnaheim/ch.kof.barometer"
+    remote_archive = "opentsi/ch.kof.barometer"
     # ,
     # add_suffix     = TRUE
   )
-
+  print(all(grepl(as.character(query_date), dt$id)))
   expect_true(all(grepl(as.character(query_date), dt$id)))
 })
 
 test_that("read_open_ts errors with a clear message for a non-existent archive", {
   skip_if_offline()
+  skip_if_api_rate_limited()
 
   expect_error(
     read_open_ts(

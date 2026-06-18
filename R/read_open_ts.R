@@ -99,7 +99,8 @@ read_open_ts <- function(
       "(e.g. \"opentsi/ch.kof.globalbaro\")."
     )
   }
-  if (anyNA(suppressWarnings(as.Date(as.character(date))))) {
+  parsed_date <- tryCatch(as.Date(as.character(date)), error = function(e) NA)
+  if (anyNA(parsed_date)) {
     stop(
       "`date` must be a valid date. ",
       "Use a Date object (e.g. Sys.Date()) or an ISO string (e.g. \"2024-01-01\")."
@@ -189,6 +190,7 @@ read_open_ts <- function(
         }
       )
       dt$id <- series[i]
+      print(dt)
       if (show_vintage_dates) {
         dt[, vintage_date := commit_date]
         setcolorder(dt, neworder = c("id", "vintage_date", "date", "value"))
