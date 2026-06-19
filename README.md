@@ -75,6 +75,23 @@ ts_plot(rbind(a202307,a))
 
 <img src="man/figures/README-unnamed-chunk-4-1.png" alt="" width="100%" />
 
+## Interactive Preview
+
+`ts_preview()` renders an interactive ECharts chart in the RStudio / Positron
+viewer. Pass a second series to overlay a vintage for comparison.
+
+``` r
+latest  <- read_open_ts("leading", remote_archive = "opentsi/ch.kof.globalbaro")
+vintage <- read_open_ts("leading", remote_archive = "opentsi/ch.kof.globalbaro",
+                        date = "2023-07-01")
+
+# single series
+ts_preview(latest)
+
+# latest vs vintage
+ts_preview(latest, compare = vintage, title = "KOF Global Barometer · Leading")
+```
+
 ## Get Entire History of a Time Series
 
 With opentimeseries you can get the entire history of a time series.

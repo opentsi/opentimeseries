@@ -14,11 +14,13 @@ Imports:
     data.table,
     digest,
     gert,
+    htmltools,
     jsonlite,
     fs,
     httr2
 Suggests:
     testthat (>= 3.0.0),
     tsbox,
-    withr
+    withr,
+    zoo
 Config/roxygen2/version: 8.0.0

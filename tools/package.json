@@ -1,0 +1,10 @@
+{
+  "type": "module",
+  "devDependencies": {
+    "echarts": "^5.5.1",
+    "esbuild": "^0.24.0"
+  },
+  "scripts": {
+    "build": "node build.mjs"
+  }
+}
