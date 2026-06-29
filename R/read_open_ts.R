@@ -197,7 +197,10 @@ read_open_ts <- function(
       } else {
         setcolorder(dt, neworder = c("id", "date", "value"))
       }
-      if (add_suffix) dt[, id := sprintf("%s.%s", dt$id, date)]
+      if (add_suffix) {
+        date_str <- as.character(date)
+        dt[, id := sprintf("%s.%s", id, date_str)]
+      }
       l[[i]] <- dt
     }
     names(l) <- series
@@ -307,7 +310,8 @@ read_open_ts <- function(
       setcolorder(dt, neworder = c("id", "date", "value"))
     }
     if (add_suffix) {
-      dt[, id := sprintf("%s.%s", dt$id, date)]
+      date_str <- as.character(date)
+      dt[, id := sprintf("%s.%s", id, date_str)]
     }
     l[[i]] <- dt
   }

@@ -8,7 +8,10 @@
       "Bash(curl -s \"https://raw.githubusercontent.com/opentsi/ch.fso.indpau/main/data-raw/index.md\")",
       "Bash(curl -s \"https://api.github.com/repos/opentsi/ch.fso.indpau/git/trees/main?recursive=1\")",
       "Bash(python3 -c \"import json,sys; t=json.load\\(sys.stdin\\); [print\\(x['path']\\) for x in t['tree'] if x['path'].startswith\\('data-raw/csv'\\)]\")",
-      "Bash(Rscript *)"
+      "Bash(Rscript *)",
+      "Bash(curl *)",
+      "Bash(python3 -c \"import json,sys; [print\\(f['name']\\) for f in json.load\\(sys.stdin\\)]\")",
+      "Bash(python3 -c \"import json,sys; names=[f['name'] for f in json.load\\(sys.stdin\\)]; [print\\(n\\) for n in names if 'gdp' in n.lower\\(\\) or 'nasa' in n.lower\\(\\)]\")"
     ]
   }
 }

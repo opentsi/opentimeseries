@@ -165,10 +165,10 @@ test_that("show_vintage_dates adds vintage_date column", {
     show_vintage_dates = TRUE
   )
 
-  expect_true(all(c("id", "vintage_date", "date", "value") %in% names(dt)))
-  expect_false("query_date" %in% names(dt))
-  expect_false("commit_date" %in% names(dt))
-  expect_s3_class(dt$vintage_date, "Date")
+  expect_true(all(c("id", "query_date", "commit_date", "date", "value") %in% names(dt)))
+  expect_false("vintage_date" %in% names(dt))
+  expect_s3_class(dt$query_date, "Date")
+  expect_s3_class(dt$commit_date, "Date")
 })
 
 test_that("addsuffix appends the date to the id", {
@@ -177,11 +177,10 @@ test_that("addsuffix appends the date to the id", {
 
   query_date <- as.Date("2024-01-01")
   dt <- read_open_ts(
-    series         = "barometer",
+    series         = "idx",
     date           = query_date,
-    remote_archive = "opentsi/ch.kof.barometer"
-    # ,
-    # add_suffix     = TRUE
+    remote_archive = "opentsi/ch.kof.barometer",
+    add_suffix     = TRUE
   )
   print(all(grepl(as.character(query_date), dt$id)))
   expect_true(all(grepl(as.character(query_date), dt$id)))
