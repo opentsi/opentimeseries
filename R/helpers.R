@@ -11,22 +11,32 @@ tags_list <- function(remote_archive) {
 #' @importFrom httr2 request req_headers req_error req_perform resp_body_json
 get_commit_dates <- function(remote_archive = "opentsi/kofethz",
                              lastn = 100) {
+  token <- Sys.getenv("GITHUB_TOKEN", unset = Sys.getenv("GITHUB_PAT", unset = Sys.getenv("GH_TOKEN", unset = "")))
+
   for (branch in c("main", "master")) {
     url <- sprintf(
       "https://api.github.com/repos/%s/commits?sha=%s&per_page=%d",
       remote_archive, branch, lastn
     )
-    resp <- request(url) |>
+    req <- request(url) |>
       req_headers(Accept = "application/vnd.github.v3+json") |>
-      req_error(is_error = \(r) FALSE) |>
-      req_perform()
+      req_error(is_error = \(r) FALSE)
+    if (nzchar(token)) {
+      req <- req |> req_headers(Authorization = paste("Bearer", token))
+    }
+    resp <- req_perform(req)
     if (resp$status_code == 200) break
   }
 
   if (resp$status_code != 200) {
+    hint <- if (resp$status_code == 403L || resp$status_code == 429L) {
+      " You may have hit the GitHub API rate limit. Set the GITHUB_TOKEN environment variable to increase the limit."
+    } else {
+      ""
+    }
     stop(sprintf(
-      "Archive '%s' not found or not accessible (HTTP %d).",
-      remote_archive, resp$status_code
+      "Archive '%s' not found or not accessible (HTTP %d).%s",
+      remote_archive, resp$status_code, hint
     ))
   }
 
